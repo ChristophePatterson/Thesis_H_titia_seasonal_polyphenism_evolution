@@ -97,8 +97,8 @@ library(shadowtext)
 map.plot <- ggplot(raw.pheno) +
   geom_sf(data = worldmap_proj, fill = "grey90", col = "black", linewidth = 0.5) +
   #geom_sf(data = ice_sheet, fill = "skyblue", alpha = 0.5) +
-  geom_point(aes(longitude, latitude, col = CLUSTER), show.legend = F) +
-  geom_polygon(data = hull[hull$CLUSTER!="NA",], aes(longitude, latitude, colour = CLUSTER,), size = 1,  fill = NA, show.legend = F) +
+  geom_point(aes(longitude, latitude, col = CLUSTER), size = 2, show.legend = F) +
+  #geom_polygon(data = hull[hull$CLUSTER!="NA",], aes(longitude, latitude, colour = CLUSTER,), size = 1,  fill = NA, show.legend = F) +
   #geom_text(data = pheno.location.summary, aes(lon, lat, label = CLUSTER), size = 11, col = "black") +
   geom_shadowtext(data = pheno.location.summary, aes(lon, lat, label = CLUSTER), size = 8, bg.colour='black') +
   coord_sf(xlim = range(raw.pheno$longitude)+c(-5,+5), ylim =range(raw.pheno$latitude)+c(-2,+2), default_crs = st_crs(4326)) +
@@ -226,8 +226,8 @@ library(shadowtext)
 map.plot <- ggplot(raw.pheno) +
   geom_sf(data = worldmap_proj, fill = "grey90", col = "black", linewidth = 0.5) +
   #geom_sf(data = ice_sheet, fill = "skyblue", alpha = 0.5) +
-  geom_point(aes(longitude, latitude, col = CLUSTER), show.legend = F) +
-  geom_polygon(data = hull[hull$CLUSTER!="NA",], aes(longitude, latitude, colour = CLUSTER,), size = 1,  fill = NA, show.legend = F) +
+  geom_point(aes(longitude, latitude, col = CLUSTER), size = 2, show.legend = F) +
+  #geom_polygon(data = hull[hull$CLUSTER!="NA",], aes(longitude, latitude, colour = CLUSTER,), size = 1,  fill = NA, show.legend = F) +
   #geom_text(data = pheno.location.summary, aes(lon, lat, label = CLUSTER), size = 11, col = "black") +
   geom_shadowtext(data = pheno.location.summary, aes(lon, lat, label = CLUSTER), size = 8, bg.colour='black') +
   coord_sf(xlim = range(raw.pheno$longitude)+c(-5,+5), ylim =range(raw.pheno$latitude)+c(-2,+2), default_crs = st_crs(4326)) +
@@ -292,7 +292,7 @@ nsims=1000
 asin.limits <- c(asin(sqrt(c(0,1))))
 modelOUr1.ce <- mvOU(data = as.matrix(var.mean), error = as.matrix(var.sq.se), tree = tree.phylo.r1)
 modelOUr1.no.ce <- mvOU(data = as.matrix(var.mean), error = as.matrix(var.sq.se), tree = tree.phylo.r1,
-                        param = list(sigma="constraint", alpha="constraint"))
+                        param = list(decomp = "diagonal", decompSigma="diagonal"))
 # Model OU with and without co-evolution
 
 
@@ -316,7 +316,7 @@ modelOUr1.no.ce.sims.plot <- ggplot(modelOUr1.no.ce.sims[!modelOUr1.no.ce.sims$o
   geom_point(aes(V1,V2,col = cluster), alpha = 0.5, show.legend = F) +
   geom_point(data = var.mean, aes(peak, trough, fill = LETTERS[1:8]), col = "black", size = 5, shape = 21, stroke = 2) +
   scale_color_manual(values = cbPalette) + scale_fill_manual(values = cbPalette) +
-  labs(x = "peak", y = "off-peak") +
+  labs(x = "Peak", y = "Off-peak") +
   theme_bw() +
   theme(panel.background = element_rect(fill = 'white')) +
   theme(text = element_text(size = 18)) +
@@ -329,20 +329,20 @@ modelOUr1.no.ce.sims.plot <- ggplot(modelOUr1.no.ce.sims[!modelOUr1.no.ce.sims$o
 
 ggsave(filename = "plots/simulation_plot_OUr1_no_ce.png", plot = modelOUr1.no.ce.sims.plot, width = 6, height = 5)
 
-sim.OU.r1.r3.HL.P.LRT <- readRDS("data/models/sim.OU.r1.r3.HL.P.LRT.rds")
-hist(sim.OU.r1.r3.HL.P.LRT$LRT.lim, freq = T, breaks = 20,  ylim = c(0, 400))
+sims.modelOUr3.HL.P.ce.A.LRT <- readRDS("data/models/modelOUr1.no.ce.sims.LRT.rds")
+hist(sims.modelOUr3.HL.P.ce.A.LRT$LRT.lim, freq = T, breaks = 20,  ylim = c(0, 400))
 abline(v = LRT(modelOUr1.no.ce, modelOUr3.HL.P.no.ce, echo = F)$ratio, lwd  = 3)
 points(LRT(modelOUr1.no.ce, modelOUr3.HL.P.no.ce, echo = F)$ratio, 350, cex = 4, pch = 19)
 
 # Number of simulated LRT that were greater than observed LRT
-LRT.OU.r1.r3.HL.P <- table(sim.OU.r1.r3.HL.P.LRT$LRT.lim > LRT(modelOUr1.no.ce, modelOUr3.HL.P.no.ce, echo = F)$ratio)/nsims*100
+LRT.OU.r1.r3.HL.P <- table(sims.modelOUr3.HL.P.ce.A.LRT$LRT.lim > LRT(modelOUr1.no.ce, modelOUr3.HL.P.no.ce, echo = F)$ratio)/nsims*100
 
-sim.OU.r1.r3.HL.P.LRT$exceeds.lim
-t <- ggplot(sim.OU.r1.r3.HL.P.LRT[sim.OU.r1.r3.HL.P.LRT$LRT.lim>0,]) +
+sims.modelOUr3.HL.P.ce.A.LRT$exceeds.lim
+t <- ggplot(sims.modelOUr3.HL.P.ce.A.LRT[sims.modelOUr3.HL.P.ce.A.LRT$LRT.lim>0,]) +
   geom_histogram(aes(LRT.lim,
-                     fill = sim.OU.r1.r3.HL.P.LRT$exceeds.lim[sim.OU.r1.r3.HL.P.LRT$LRT.lim>0]), binwidth = 0.5, show.legend = F) + 
+                     fill = sims.modelOUr3.HL.P.ce.A.LRT$exceeds.lim[sims.modelOUr3.HL.P.ce.A.LRT$LRT.lim>0]), binwidth = 0.5, show.legend = F) + 
   geom_vline(xintercept = LRT(modelOUr1.no.ce, modelOUr3.HL.P.no.ce, echo = F)$ratio) +
-  geom_point(aes(x = LRT(modelOUr1.no.ce, modelOUr3.HL.P.no.ce, echo = F)$ratio, y = 100*0.8), size = 8) +
+  geom_point(aes(x = LRT(modelOUr1.no.ce, modelOUr1.ce, echo = F)$ratio, y = 100*0.8), size = 8) +
   theme_bw() +
   ylim(c(0, 100)) +
   scale_fill_manual(values = c("skyblue", "deepskyblue")) +
