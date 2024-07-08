@@ -162,7 +162,7 @@ load("data/world_data/hydroRIVERS/HydroRIVERS_v10_na_sub_hybrid.rda")
 e.hyb <- raster::extent(-95.965576,-93.861694,15.998295,17.395200)
 world_map_hyb <- st_crop(world_map_hyb,e.hyb)
 plot(world_map_hyb[1])
-crs
+
 raw.pheno.hyb <- raw.pheno
 raw.pheno.hyb$hybrid.region <- raw.pheno$latitude<17.395200&raw.pheno$latitude>15.998295&raw.pheno$longitude<(-93.861694)&raw.pheno$longitude>(-95.965576)
 
@@ -291,10 +291,9 @@ tree.phylo.r3.HL.P <- paintSubTree(tree.phylo.r2.HL, node=10, state="Pacific", a
 nsims=1000
 asin.limits <- c(asin(sqrt(c(0,1))))
 modelOUr1.ce <- mvOU(data = as.matrix(var.mean), error = as.matrix(var.sq.se), tree = tree.phylo.r1)
-modelOUr1.no.ce <- mvOU(data = as.matrix(var.mean), error = as.matrix(var.sq.se), tree = tree.phylo.r1,
-                        param = list(decomp = "diagonal", decompSigma="diagonal"))
+modelOUr3.HL.P.no.ce <- mvOU(data = as.matrix(var.mean), error = as.matrix(var.sq.se), tree = tree.phylo.r3.HL.P, 
+                             param = list(decomp = "diagonal", decompSigma="diagonal"))
 # Model OU with and without co-evolution
-
 
 modelOUr1.no.ce.sims <- mvSIM(tree = tree.phylo, nsim = nsims, model = c("OU1"), param = list(theta = modelOUr1.no.ce$theta,
                                                                                               alpha = modelOUr1.no.ce$alpha,
@@ -329,20 +328,20 @@ modelOUr1.no.ce.sims.plot <- ggplot(modelOUr1.no.ce.sims[!modelOUr1.no.ce.sims$o
 
 ggsave(filename = "plots/simulation_plot_OUr1_no_ce.png", plot = modelOUr1.no.ce.sims.plot, width = 6, height = 5)
 
-sims.modelOUr3.HL.P.ce.A.LRT <- readRDS("data/models/modelOUr1.no.ce.sims.LRT.rds")
-hist(sims.modelOUr3.HL.P.ce.A.LRT$LRT.lim, freq = T, breaks = 20,  ylim = c(0, 400))
+sim.OU.r1.r3.HL.P.LRT <- readRDS("data/models/sim.OU.r1.r3.HL.P.LRT.rds")
+hist(sim.OU.r1.r3.HL.P.LRT$LRT.lim, freq = T, breaks = 20,  ylim = c(0, 400))
 abline(v = LRT(modelOUr1.no.ce, modelOUr3.HL.P.no.ce, echo = F)$ratio, lwd  = 3)
 points(LRT(modelOUr1.no.ce, modelOUr3.HL.P.no.ce, echo = F)$ratio, 350, cex = 4, pch = 19)
 
 # Number of simulated LRT that were greater than observed LRT
-LRT.OU.r1.r3.HL.P <- table(sims.modelOUr3.HL.P.ce.A.LRT$LRT.lim > LRT(modelOUr1.no.ce, modelOUr3.HL.P.no.ce, echo = F)$ratio)/nsims*100
+LRT.OU.r1.r3.HL.P <- table(sim.OU.r1.r3.HL.P.LRT$LRT.lim > LRT(modelOUr1.no.ce, modelOUr3.HL.P.no.ce, echo = F)$ratio)/nsims*100
 
-sims.modelOUr3.HL.P.ce.A.LRT$exceeds.lim
-t <- ggplot(sims.modelOUr3.HL.P.ce.A.LRT[sims.modelOUr3.HL.P.ce.A.LRT$LRT.lim>0,]) +
+sim.OU.r1.r3.HL.P.LRT$exceeds.lim
+t <- ggplot(sim.OU.r1.r3.HL.P.LRT[sim.OU.r1.r3.HL.P.LRT$LRT.lim>0,]) +
   geom_histogram(aes(LRT.lim,
-                     fill = sims.modelOUr3.HL.P.ce.A.LRT$exceeds.lim[sims.modelOUr3.HL.P.ce.A.LRT$LRT.lim>0]), binwidth = 0.5, show.legend = F) + 
+                     fill = sim.OU.r1.r3.HL.P.LRT$exceeds.lim[sim.OU.r1.r3.HL.P.LRT$LRT.lim>0]), binwidth = 0.5, show.legend = F) + 
   geom_vline(xintercept = LRT(modelOUr1.no.ce, modelOUr3.HL.P.no.ce, echo = F)$ratio) +
-  geom_point(aes(x = LRT(modelOUr1.no.ce, modelOUr1.ce, echo = F)$ratio, y = 100*0.8), size = 8) +
+  geom_point(aes(x = LRT(modelOUr1.no.ce, modelOUr3.HL.P.no.ce, echo = F)$ratio, y = 100*0.8), size = 8) +
   theme_bw() +
   ylim(c(0, 100)) +
   scale_fill_manual(values = c("skyblue", "deepskyblue")) +
@@ -367,7 +366,10 @@ ggsave(filename = "plots/simulation_plot_OUr1_no_ce_with_hist.png", plot = model
 
 #### Simulation without co-evolution
 
-modelOUr3.HL.P.no.ce <- mvOU(data = as.matrix(var.mean), error = as.matrix(var.sq.se), tree = tree.phylo.r3.HL.P, param = list(sigma="constraint", alpha="constraint"))
+modelOUr3.HL.P.no.ce <- mvOU(data = as.matrix(var.mean), error = as.matrix(var.sq.se), tree = tree.phylo.r3.HL.P, 
+                             param = list(decomp = "diagonal", decompSigma="diagonal"))
+modelOUr3.HL.P.ce.A <- mvOU(data = as.matrix(var.mean), error = as.matrix(var.sq.se), tree = tree.phylo.r3.HL.P, 
+                             param = list(decompSigma="diagonal"))
 
 model.sims.OUr3.HL.P.no.ce <- mvSIM(tree = tree.phylo.r3.HL.P, 
                                     nsim = nsims, model = c("OUM"), 
@@ -388,9 +390,6 @@ model.sims.OUr3.HL.P.no.ce <- as.data.frame(do.call("rbind",model.sims.OUr3.HL.P
 model.sims.OUr3.HL.P.no.ce$cluster <- stringr::str_split_i(rownames(model.sims.OUr3.HL.P.no.ce),"\\.",1)
 model.sims.OUr3.HL.P.no.ce$oobs <- model.sims.OUr3.HL.P.no.ce$V1<asin.limits[1]|model.sims.OUr3.HL.P.no.ce$V1>asin.limits[2]|model.sims.OUr3.HL.P.no.ce$V2<asin.limits[1]|model.sims.OUr3.HL.P.no.ce$V2>asin.limits[2]
 
-head(model.sims.OUr3.HL.P.no.ce)
-
-
 model.sims.OUr3.HL.P.no.ce.plot <- ggplot(model.sims.OUr3.HL.P.no.ce[!model.sims.OUr3.HL.P.no.ce$oobs,]) +
   geom_point(aes(V1,V2,col = cluster), alpha = 0.5, show.legend = F) +
   geom_point(data = var.mean, aes(peak, trough, fill = LETTERS[1:8]), col = "black", size = 5, shape = 21, stroke = 2) +
@@ -409,28 +408,28 @@ model.sims.OUr3.HL.P.no.ce.plot <- ggplot(model.sims.OUr3.HL.P.no.ce[!model.sims
 
 ggsave(filename = "plots/simulation_plot_OUr3_HL_P_no_ce.png", plot = model.sims.OUr3.HL.P.no.ce.plot, width = 6, height = 5)
 
-sim.OU.r3.HL.P.ce.LRT <- readRDS("data/models/sim.OU.r3.HL.P.ce.LRT.rds")
-hist(sim.OU.r3.HL.P.ce.LRT$LRT.lim, freq = T, breaks = 20,  ylim = c(0, 400))
-abline(v = LRT(modelOUr3.HL.P, modelOUr3.HL.P.no.ce, echo = F)$ratio, lwd  = 3)
-points(LRT(modelOUr3.HL.P, modelOUr3.HL.P.no.ce, echo = F)$ratio, 350, cex = 4, pch = 19)
+sims.modelOUr3.HL.P.ce.A.LRT <- readRDS("data/models/sims.modelOUr3.HL.P.ce.A.LRT.rds")
+hist(sims.modelOUr3.HL.P.ce.A.LRT$LRT.lim, freq = T, breaks = 20,  ylim = c(0, 400))
+abline(v = LRT(modelOUr3.HL.P.no.ce, modelOUr3.HL.P.ce.A, echo = F)$ratio, lwd  = 3)
+points(LRT(modelOUr3.HL.P.no.ce, modelOUr3.HL.P.ce.A, echo = F)$ratio, 350, cex = 4, pch = 19)
 summary(sim.OU.r3.HL.P.ce.LRT$LRT)
 
-LRT.OU.r3.ce <- table(sim.OU.r3.HL.P.ce.LRT$LRT.lim>LRT(modelOUr3.HL.P, modelOUr3.HL.P.no.ce, echo = F)$ratio)/nsims*100
+LRT.OU.r3.ce <- table(sims.modelOUr3.HL.P.ce.A.LRT$LRT.lim>LRT(modelOUr3.HL.P.no.ce, modelOUr3.HL.P.ce.A, echo = F)$ratio)/nsims*100
 
 
-k <- ggplot() +
-  geom_histogram(aes(sim.OU.r3.HL.P.ce.LRT$LRT.lim, 
-                     fill = as.character(modelOUr1.no.ce.sims.LRT$exceed.limits)), binwidth = 0.5, show.legend = F) + 
-  geom_vline(xintercept = LRT(modelOUr3.HL.P, modelOUr3.HL.P.no.ce, echo = F)$ratio) +
-  geom_point(aes(x = LRT(modelOUr3.HL.P, modelOUr3.HL.P.no.ce, echo = F)$ratio, y = (100)*0.8), size = 8) +
+k <- ggplot(sims.modelOUr3.HL.P.ce.A.LRT[sims.modelOUr3.HL.P.ce.A.LRT$LRT.lim>0,]) +
+  geom_histogram(aes(LRT.lim, 
+                     fill = as.character(exceeds.limits)), binwidth = 0.5, show.legend = F) + 
+  geom_vline(xintercept = LRT(modelOUr3.HL.P.no.ce, modelOUr3.HL.P.ce.A, echo = F)$ratio) +
+  geom_point(aes(x = LRT(modelOUr3.HL.P.no.ce, modelOUr3.HL.P.ce.A, echo = F)$ratio, y = (200)*0.8), size = 8) +
   theme_bw() +
   scale_fill_manual(values = c("skyblue", "deepskyblue")) +
-  ylim(c(0, 100)) +
+  ylim(c(0, 200)) +
   xlab("likelihood ratio") +
   ylab("Frequency") +
-  ggtitle("Co-evolution with High Latitude, Pacific, and Atlantic regimes") +
+  ggtitle("Co-evolution with regimes") +
   labs(subtitle = paste0(LRT.OU.r3.ce[2], "% greater than the observed models")) +
-  theme(text = element_text(size = 18), title = element_text(size = 18*0.6),
+  theme(text = element_text(size = 18),
         plot.background = element_rect(fill='#E5D9BA', color=NA), #transparent plot bg
         #panel.grid.major = element_blank(), #remove major gridlines
         #panel.grid.minor = element_blank(), #remove minor gridlines
@@ -442,16 +441,16 @@ table(sim.OU.r3.HL.P.ce.LRT$corr.lim>cov2cor(stationary(modelOUr3.HL.P))[1,2])/n
 table(abs(sim.OU.r3.HL.P.ce.LRT$corr.lim)<abs(cov2cor(stationary(modelOUr3.HL.P))[1,2]))/nsims*100
 
 kk <- ggplot() +
-  geom_histogram(aes(sim.OU.r3.HL.P.ce.LRT$corr.lim, fill = as.character(modelOUr1.no.ce.sims.LRT$exceed.limits)), binwidth = 0.05, show.legend = F) + 
-  geom_vline(xintercept = cov2cor(stationary(modelOUr3.HL.P))[1,2]) +
-  geom_point(aes(x = cov2cor(stationary(modelOUr3.HL.P))[1,2], y = 50*0.8), size = 6, shape = 17) +
+  geom_histogram(aes(sims.modelOUr3.HL.P.ce.A.LRT$corr.lim, fill = as.character(sims.modelOUr3.HL.P.ce.A.LRT$exceeds.limits)), binwidth = 0.05, show.legend = F) + 
+  geom_vline(xintercept = cov2cor(stationary(modelOUr3.HL.P.ce.A))[1,2]) +
+  geom_point(aes(x = cov2cor(stationary(modelOUr3.HL.P.ce.A))[1,2], y = 50*0.8), size = 6, shape = 17) +
   theme_bw() +
   scale_fill_manual(values = c("orange", "orangered")) +
   ylim(c(0, 50)) +
   xlim(-1,1) +
   xlab("Standardised stationary covariance") +
   ylab("Frequency") +
-  theme(text = element_text(size = 12), title = element_text(size = 12*0.6),
+  theme(text = element_text(size = 15), title = element_text(size = 15*0.6),
         plot.background = element_rect(fill='transparent', color=NA), #transparent plot bg
         #panel.grid.major = element_blank(), #remove major gridlines
         #panel.grid.minor = element_blank(), #remove minor gridlines
