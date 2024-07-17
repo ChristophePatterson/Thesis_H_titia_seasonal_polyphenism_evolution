@@ -896,10 +896,10 @@ f <- ggplot() +
   geom_histogram(aes(sims.modelOUr3.HL.P.sda.ce.A.LRT$LRT.lim[sims.modelOUr3.HL.P.sda.ce.A.LRT$LRT.lim>0], 
                      fill = as.character(sims.modelOUr3.HL.P.sda.ce.A.LRT$exceeds.limits[sims.modelOUr3.HL.P.sda.ce.A.LRT$LRT.lim>0])), binwidth = 0.5, show.legend = F) + 
   geom_vline(xintercept = LRT(modelOUr3.HL.P.sda.no.ce, modelOUr3.HL.P.sda.ce, echo = F)$ratio) +
-  geom_point(aes(x = LRT(modelOUr3.HL.P.sda.no.ce, modelOUr3.HL.P.sda.ce, echo = F)$ratio, y = (200)*0.8), size = 8) +
+  geom_point(aes(x = LRT(modelOUr3.HL.P.sda.no.ce, modelOUr3.HL.P.sda.ce, echo = F)$ratio, y = (300)*0.8), size = 8) +
   theme_classic() +
   scale_fill_manual(values = c("skyblue", "deepskyblue")) +
-  ylim(c(0, 200)) +
+  ylim(c(0, 300)) +
   xlab("likelihood ratio") +
   ylab("Frequency") +
   ggtitle("Co-evolution with High Latitude, Pacific, and Atlantic regimes") +
