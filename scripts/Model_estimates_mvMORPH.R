@@ -703,16 +703,18 @@ sin(modelOUr3.HL.P.no.ce$theta)^2
 modelOUr3.HL.P.ce.A <- mvOU(data = as.matrix(var.mean), error = as.matrix(var.sq.se), tree = tree.phylo.r3.HL.P,
                             param = list(decompSigma="diagonal"))
 
-modelOUr3.HL.P.ce.A.sims <- mvSIM(tree = tree.phylo.r3.HL.P, nsim = nsims, model = c("OUM"), param = list(theta = modelOUr3.HL.P.ce.A$theta,
-                                                                                                          alpha = modelOUr3.HL.P.ce.A$alpha,
-                                                                                                          sigma = modelOUr3.HL.P.ce.A$sigma))
-
+modelOUr3.HL.P.ce.A.sims <- mvSIM(tree = tree.phylo.r3.HL.P, 
+                                  nsim = nsims, model = c("OUM"), 
+                                  param = list(theta = modelOUr3.HL.P.ce.A$theta,
+                                               alpha = modelOUr3.HL.P.ce.A$alpha,
+                                               sigma = modelOUr3.HL.P.ce.A$sigma))
 # Plot simulated data and true data
 plot(NA, NA, xlab = "peak", ylab = "off-peak", xlim = asin.limits+c(-0.5,0.5), ylim=asin.limits+c(-0.5,0.5))
 lines(c(asin.limits[1],asin.limits[2],asin.limits[2],asin.limits[1],asin.limits[1]),
       c(asin.limits[1],asin.limits[1],asin.limits[2],asin.limits[2],asin.limits[1]), lwd = 4)
 lapply(modelOUr3.HL.P.ce.A.sims, function(x) points(x, col = as.factor(row.names(x))))
 points(var.mean, cex = 5, pch = 4, lwd = 10, col = as.factor(row.names(var.mean)))
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 ##### Co-evolution with multiple regimes constrained alpha using decomp ####
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
@@ -813,3 +815,118 @@ pqvtj <- pqvtj + plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix 
 pqvtj
 
 ggsave(plot = pqvtj, filename= "plots/LDR_coevolve_and_regeimes_Reg_cov_in_alpha_wlims_.png", width = 12, height = 15)
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+##### Co-evolution with multiple regimes constrained diagonal alpha using decomp ####
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# Simulate evolution with a different selective regime between HL and all other lineages
+
+alpha.set.diagonal <- matrix(c(1,NA,NA,1), nrow = 2)
+sigma.set.diagonal <- matrix(c(1,NA,NA,1), nrow = 2)
+# Model with same diagonal plots and no co-evolution (NA diagonal alpha)
+modelOUr3.HL.P.sda.no.ce <- mvOU(data = as.matrix(var.mean), error = as.matrix(var.sq.se), tree = tree.phylo.r3.HL.P, 
+                             param = list(decomp = alpha.set.diagonal, decompSigma=sigma.set.diagonal))
+# Model with same diagonal alpha values but with co-evolution
+modelOUr3.HL.P.sda.ce <- mvOU(data = as.matrix(var.mean), error = as.matrix(var.sq.se), tree = tree.phylo.r3.HL.P, 
+                                 param = list(decomp = matrix(c(1,2,2,1), nrow = 2), decompSigma = sigma.set.diagonal))
+
+
+modelOUr3.HL.P.sda.no.ce.sims <- mvSIM(tree = tree.phylo.r3.HL.P, 
+                                   nsim = nsims, model = c("OUM"), 
+                                   param = list(theta = modelOUr3.HL.P.sda.no.ce$theta,
+                                                alpha = modelOUr3.HL.P.sda.no.ce$alpha,
+                                                sigma = modelOUr3.HL.P.sda.no.ce$sigma))
+
+# Plot simulated data and true data
+plot(NA, NA, xlab = "peak", ylab = "off-peak", xlim = asin.limits+c(-0.5,0.5), ylim=asin.limits+c(-0.5,0.5))
+lines(c(asin.limits[1],asin.limits[2],asin.limits[2],asin.limits[1],asin.limits[1]),
+      c(asin.limits[1],asin.limits[1],asin.limits[2],asin.limits[2],asin.limits[1]), lwd = 4)
+lapply(modelOUr3.HL.P.sda.no.ce.sims, function(x) points(x, col = as.factor(row.names(x))))
+points(var.mean, cex = 5, pch = 4, lwd = 10, col = as.factor(row.names(var.mean)))
+
+# Does simulations include values outside of valid phenotype arc sin of the square root of 0 to 1)
+sim.exceed.limits <- lapply(modelOUr3.HL.P.sda.no.ce.sims, function(x) any(x<asin.limits[1]|x>asin.limits[2]))
+table(unlist(sim.exceed.limits))
+
+## Actual correlation
+cov2cor(stationary(modelOUr3.HL.P.sda.ce))[1,2]
+# Calculate the likelihood ratio models on the simlations
+sims.modelOUr3.HL.P.sda.ce.A.LRT <- lapply(modelOUr3.HL.P.sda.no.ce.sims, function(x, i = 1){
+ # If there are any values within the simulation that are outside of valid range make them equal to the limit
+ # x <- modelOUr3.HL.P.sda.no.ce.sims[[20]]
+ x.rm.lim <- x
+ x.rm.lim[x.rm.lim<(asin.limits[1])] <- 0
+ x.rm.lim[x.rm.lim>(asin.limits[2])] <- asin(sqrt(1))
+ # Creates temp model
+ temp.model.mvOUMr3.no.ce.sda <- mvOU(tree = tree.phylo.r3.HL.P, model = "OUM", data = x, echo = F, diagnostic = F, 
+                                        param = list(decomp = alpha.set.diagonal, decompSigma=sigma.set.diagonal))
+ temp.model.mvOUMr3.ce.sda <- mvOU(tree = tree.phylo.r3.HL.P, model = "OUM", data = x, echo = F, diagnostic = F, 
+                                     param = list(decomp=matrix(c(1,2,2,1), nrow = 2), decompSigma=sigma.set.diagonal))
+ # Temp model with data set to limits
+ temp.model.mvOUMr3.no.ce.sda.lim <- mvOU(tree = tree.phylo.r3.HL.P, model = "OUM", data = x.rm.lim, echo = F, diagnostic = F, 
+                                      param = list(decomp = alpha.set.diagonal, decompSigma=sigma.set.diagonal))
+ temp.model.mvOUMr3.ce.sda.lim <- mvOU(tree = tree.phylo.r3.HL.P, model = "OUM", data = x.rm.lim, echo = F, diagnostic = F, 
+                                   param = list(decomp=matrix(c(1,2,2,1), nrow = 2), decompSigma=sigma.set.diagonal))
+ 
+ # Compares models to determine if "correct" model is returned
+ temp.LWD <- LRT(temp.model.mvOUMr3.no.ce.sda, temp.model.mvOUMr3.ce.sda, echo = F)
+ temp.LWD.lim <- LRT(temp.model.mvOUMr3.no.ce.sda.lim, temp.model.mvOUMr3.ce.sda.lim, echo = F)
+ temp.corr <- cov2cor(stationary(temp.model.mvOUMr3.ce.sda))
+ temp.corr.lim <- cov2cor(stationary(temp.model.mvOUMr3.ce.sda.lim))
+ return(data.frame(LRT = temp.LWD$ratio, LRT.lim = temp.LWD.lim$ratio, corr = temp.corr[1,2], corr.lim = temp.corr.lim[1,2]))
+})
+
+sims.modelOUr3.HL.P.sda.ce.A.LRT <- do.call("rbind", sims.modelOUr3.HL.P.sda.ce.A.LRT)
+sims.modelOUr3.HL.P.sda.ce.A.LRT$exceeds.limits <- unlist(sim.exceed.limits)
+saveRDS(sims.modelOUr3.HL.P.sda.ce.A.LRT, file = "data/models/sims.modelOUr3.HL.P.sda.ce.A.LRT.rds")
+
+sims.modelOUr3.HL.P.sda.ce.A.LRT <- readRDS("data/models/sims.modelOUr3.HL.P.sda.ce.A.LRT.rds")
+hist(sims.modelOUr3.HL.P.sda.ce.A.LRT$LRT.lim, freq = T, breaks = 20,  ylim = c(0, 400))
+abline(v = LRT(modelOUr3.HL.P.sda.no.ce, modelOUr3.HL.P.sda.ce, echo = F)$ratio, lwd  = 3)
+points(LRT(modelOUr3.HL.P.sda.no.ce, modelOUr3.HL.P.sda.ce, echo = F)$ratio, 350, cex = 4, pch = 19)
+summary(sims.modelOUr3.HL.P.sda.ce.A.LRT$LRT)
+
+table(sims.modelOUr3.HL.P.sda.ce.A.LRT$LRT.lim<0)
+
+#LRT.OU.r3.ce.A <- table(sims.modelOUr3.HL.P.ce.A.LRT$LRT.lim>LRT(modelOUr3.HL.P.ce.A, modelOUr3.HL.P.no.ce, echo = F)$ratio)/nsims*100
+LRT.OU.r3.ce.A <- table((sims.modelOUr3.HL.P.sda.ce.A.LRT$LRT.lim>LRT(modelOUr3.HL.P.sda.no.ce, modelOUr3.HL.P.sda.ce, echo = F)$ratio)[!sims.modelOUr3.HL.P.sda.ce.A.LRT$LRT.lim<0])
+LRT.OU.r3.ce.A <- round(LRT.OU.r3.ce.A/sum(LRT.OU.r3.ce.A)*100, 1)
+
+f <- ggplot() +
+  geom_histogram(aes(sims.modelOUr3.HL.P.sda.ce.A.LRT$LRT.lim[sims.modelOUr3.HL.P.sda.ce.A.LRT$LRT.lim>0], 
+                     fill = as.character(sims.modelOUr3.HL.P.sda.ce.A.LRT$exceeds.limits[sims.modelOUr3.HL.P.sda.ce.A.LRT$LRT.lim>0])), binwidth = 0.5, show.legend = F) + 
+  geom_vline(xintercept = LRT(modelOUr3.HL.P.sda.no.ce, modelOUr3.HL.P.sda.ce, echo = F)$ratio) +
+  geom_point(aes(x = LRT(modelOUr3.HL.P.sda.no.ce, modelOUr3.HL.P.sda.ce, echo = F)$ratio, y = (200)*0.8), size = 8) +
+  theme_classic() +
+  scale_fill_manual(values = c("skyblue", "deepskyblue")) +
+  ylim(c(0, 200)) +
+  xlab("likelihood ratio") +
+  ylab("Frequency") +
+  ggtitle("Co-evolution with High Latitude, Pacific, and Atlantic regimes") +
+  labs(subtitle = paste0(LRT.OU.r3.ce.A[2], "% greater than the observed models")) +
+  theme(text = element_text(size = text.size), title = element_text(size = text.size*0.75))
+
+table(sim.OU.r3.HL.P.ce.LRT$corr.lim>cov2cor(stationary(modelOUr3.HL.P))[1,2])/nsims*100
+table(abs(sim.OU.r3.HL.P.ce.LRT$corr.lim)<abs(cov2cor(stationary(modelOUr3.HL.P))[1,2]))/nsims*100
+
+ff <- ggplot() +
+  geom_histogram(aes(sims.modelOUr3.HL.P.sda.ce.A.LRT$corr.lim, fill = as.character(sims.modelOUr3.HL.P.sda.ce.A.LRT$exceeds.limits)), binwidth = 0.05, show.legend = F) + 
+  geom_vline(xintercept = cov2cor(stationary(modelOUr3.HL.P.sda.ce))[1,2]) +
+  geom_point(aes(x = cov2cor(stationary(modelOUr3.HL.P.sda.ce))[1,2], y = 50*0.8), size = 6, shape = 17) +
+  theme_classic() +
+  scale_fill_manual(values = c("orange", "orangered")) +
+  ylim(c(0, 60)) +
+  xlim(-1,1) +
+  xlab("Standardised stationary covariance") +
+  ylab("Frequency") +
+  theme(text = element_text(size = text.size*0.5), title = element_text(size = text.size*0.5))
+
+f <- f + inset_element(ff, align_to = "plot", left = 0.5, right = 0.95, bottom = 0.4, top = 0.95, ignore_tag = F, on_top = T)
+
+pqvtf <- ((p+q)/(v+t)/f)
+pqvtf <- pqvtf + plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")")
+pqvtf
+
+ggsave(plot = pqvtf, filename= "plots/LDR_coevolve_and_regeimes_Reg_cov_in_alpha_wlims_and_set_alpha_diagonal.png", width = 12, height = 15)
+
+
