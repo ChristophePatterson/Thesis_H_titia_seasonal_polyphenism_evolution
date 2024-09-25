@@ -209,7 +209,7 @@ points(LRT(modelOUr1.ce, modelOUr1.no.ce, echo = F)$ratio, 350, cex = 4, pch = 1
 LRT.no.ce <- table(modelOUr1.no.ce.sims.LRT$LRT.lim>LRT(modelOUr1.ce, modelOUr1.no.ce, echo = F)$ratio)/nsims*100
 
 max.y <- 250
-text.size = 20
+text.size = 16
 
 p <- ggplot(modelOUr1.no.ce.sims.LRT[modelOUr1.no.ce.sims.LRT$LRT.lim>=0,]) +
   geom_histogram(aes(LRT.lim, 
@@ -221,7 +221,7 @@ p <- ggplot(modelOUr1.no.ce.sims.LRT[modelOUr1.no.ce.sims.LRT$LRT.lim>=0,]) +
   ylim(c(0, max.y)) +
   xlab("likelihood ratio") +
   ylab("Frequency") +
-  ggtitle("Co-evolution") +
+  ggtitle("Co-evolution with single regime") +
   labs(subtitle = paste0(LRT.no.ce[2], "% greater than the observed models")) +
   theme(text = element_text(size = text.size), title = element_text(size = text.size*0.75))
 p
@@ -235,7 +235,7 @@ pp <- ggplot(modelOUr1.no.ce.sims.LRT[modelOUr1.no.ce.sims.LRT$LRT.lim>=0,]) +
   xlim(-1,1) +
   xlab("Standardised stationary covariance") +
   ylab("Frequency") +
-  theme(text = element_text(size = text.size*0.5), title = element_text(size = text.size*0.5))
+  theme(text = element_text(size = text.size*0.6), title = element_text(size = text.size*0.6))
 pp
 #variance
 p <- p + inset_element(pp, align_to = "plot", left = 0.4, right = 0.95, bottom = 0.4, top = 0.95, ignore_tag = F)
@@ -305,7 +305,7 @@ q <- ggplot(sim.OU.r1.r2P.LRT[sim.OU.r1.r2P.LRT$LRT.lim>0,]) +
   scale_fill_manual(values = c("skyblue", "deepskyblue")) +
   xlab("likelihood ratio") +
   ylab("Frequency") +
-  ggtitle("Pacific and Atlantic regimes") +
+  ggtitle("No co-evolution with Pacific, & Atlantic regimes") +
   labs(subtitle = paste0(LRT.r1.no.ce[2], "% greater than the observed models")) +
   theme(text = element_text(size = text.size), title = element_text(size = text.size*0.75))
 
@@ -387,7 +387,7 @@ v <- ggplot(sim.OU.r1.r2HL.LRT[sim.OU.r1.r2HL.LRT$LRT.lim>0,]) +
   #xlim(c(-0, max(sim.OU.r1.r2HL.LRT$LRT.lim))) +
   xlab("likelihood ratio") +
   ylab("Frequency") +
-  ggtitle("High latitude regime") +
+  ggtitle("No co-evolution with High latitude regime") +
   labs(subtitle = paste0(round(LRT.r2.HL.no.ce[2], digits = 1), "% greater than the observed models")) +
   theme(text = element_text(size = text.size), title = element_text(size = text.size*0.75))
 v
@@ -460,7 +460,7 @@ t <- ggplot(sim.OU.r1.r3.HL.P.LRT[sim.OU.r1.r3.HL.P.LRT$LRT.lim>0,]) +
   scale_fill_manual(values = c("skyblue", "deepskyblue")) +
   xlab("likelihood ratio") +
   ylab("Frequency") +
-  ggtitle("High latitude, Pacific, and Atlantic regimes") +
+  ggtitle("No co-evolution with High latitude, Pacific, & Atlantic regimes") +
   labs(subtitle = paste0(LRT.OU.r1.r3.HL.P[2], "% greater than the observed models")) +
   theme(text = element_text(size = text.size), title = element_text(size = text.size*0.75))
 
@@ -535,7 +535,7 @@ z <- ggplot(sim.OU.r2.r3.HL.P.LRT[sim.OU.r2.r3.HL.P.LRT$LRT.lim>0,]) +
   scale_fill_manual(values = c("skyblue", "deepskyblue")) +
   xlab("likelihood ratio") +
   ylab("Frequency") +
-  ggtitle("Pacific and Atlantic regimes with High Latitude") +
+  ggtitle("No co-evolution with Pacific, & Atlantic regimes with High Latitude") +
   labs(subtitle = paste0(LRT.OU.r2.r3.HL.P[2], "% greater than the observed models")) +
   theme(text = element_text(size = text.size), title = element_text(size = text.size*0.75))
 z
@@ -609,7 +609,7 @@ k <- ggplot() +
   ylim(c(0, 100)) +
   xlab("likelihood ratio") +
   ylab("Frequency") +
-  ggtitle("Co-evolution with High Latitude, Pacific, and Atlantic regimes") +
+  ggtitle("Co-evolution with High Latitude, Pacific, & Atlantic regimes") +
   labs(subtitle = paste0(LRT.OU.r3.ce[2], "% greater than the observed models")) +
   theme(text = element_text(size = text.size), title = element_text(size = text.size*0.75))
 
@@ -626,14 +626,13 @@ kk <- ggplot() +
   xlim(-1,1) +
   xlab("Standardised stationary covariance") +
   ylab("Frequency") +
-  theme(text = element_text(size = text.size*0.5), title = element_text(size = text.size*0.5))
+  theme(text = element_text(size = text.size*0.6), title = element_text(size = text.size*0.6))
 
 k <- k + inset_element(kk, align_to = "plot", left = 0.5, right = 0.95, bottom = 0.4, top = 0.95, ignore_tag = F)
 pqvta <- ((p+q)/(v+t)/k)
 pqvta <- pqvta + plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")")
-pqvta
 
-ggsave(plot = pqvta, filename= "plots/LDR_coevolve_and_regeimes_Reg_cov_wlims.png", width = 12, height = 15)
+ggsave(plot = pqvta, filename= "plots/LDR_coevolve_and_regeimes_Reg_cov_wlims.png", width = 12.5, height = 15)
 
 ## Model Statistics
 stats.df <- matrix(NA, nrow = 5, 3)
@@ -789,7 +788,7 @@ j <- ggplot() +
   ylim(c(0, 200)) +
   xlab("likelihood ratio") +
   ylab("Frequency") +
-  ggtitle("Co-evolution with High Latitude, Pacific, and Atlantic regimes") +
+  ggtitle("Co-evolution with High Latitude, Pacific, & Atlantic regimes") +
   labs(subtitle = paste0(LRT.OU.r3.ce.A[2], "% greater than the observed models")) +
   theme(text = element_text(size = text.size), title = element_text(size = text.size*0.75))
 
@@ -902,7 +901,7 @@ f <- ggplot() +
   ylim(c(0, 300)) +
   xlab("likelihood ratio") +
   ylab("Frequency") +
-  ggtitle("Co-evolution with High Latitude, Pacific, and Atlantic regimes") +
+  ggtitle("Co-evolution with High Latitude, Pacific, & Atlantic regimes") +
   labs(subtitle = paste0(LRT.OU.r3.ce.A[2], "% greater than the observed models")) +
   theme(text = element_text(size = text.size), title = element_text(size = text.size*0.75))
 
