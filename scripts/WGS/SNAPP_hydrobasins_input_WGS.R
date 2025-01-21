@@ -20,10 +20,10 @@ hydrobasins_5 <- sf::st_read("data/hydrosheds/hybas_na_lev01-06_v1c/hybas_na_lev
 
 # Read in VCF
 # Output file location
-SNP.library.name <- "Hetaerina_titia_ddRAD_titia_dg"
+SNP.library.name <- "titia.mysnps"
 species <- "titia"
 dir.path <- paste0("data/SNPs/")
-filter_para <- ".all.snps.NOGTDP10.MEANGTDP10_200.Q60.SAMP0.8.MAF2.rand1000.biSNP0_20.noX.noCUAJ"
+filter_para <- ".thin0_10000.missfilter"
 # Plot output file location
 plot.dir <- paste0("plots/SNPs")
 dir.create(plot.dir)
@@ -32,12 +32,12 @@ vcf <- read.vcfR(paste0(dir.path,SNP.library.name,filter_para,".vcf.gz"))
 
 # Get sample names
 samples <- colnames(vcf@gt)
-sample_map <- read.csv("data/All samples held in Durham_v17.csv")
+sample_map <- read.csv("data/Sequenced_samples140_v4.csv")
 
 #Extracting sample information
 sites <- data.frame(samples)
 sites$samples
-sites <- merge(sites, sample_map, by.x = "samples", by.y = "Unique.ID")
+sites <- merge(sites, sample_map, by.x = "samples", by.y = "Novogene.id")
 sites$Lat <- as.numeric(sites$Lat)
 sites$Long <- as.numeric(sites$Long)
 
@@ -47,6 +47,8 @@ sites_sf <- st_as_sf(sites, coords = c("Long", "Lat"))
 dim(sites_sf)
 sf_use_s2(FALSE)
 st_crs(sites_sf) <- st_crs(hydrobasins_4)
+
+plot(sites_sf)
 
 # Extract basin info for each sample point
 samples_basin_3 <- st_intersection(hydrobasins_3, sites_sf)
@@ -66,6 +68,7 @@ length(unique(samples_basin_5$HYBAS_ID))
 
 # Get highest coverage sample from each region
 vcf.bi <- vcf[is.biallelic(vcf),]
+vcf.bi@fix[,1] <- gsub("\\.", "_", vcf.bi@fix[,1])
 
 my_genind_ti <- vcfR2genind(vcf.bi, sep = "/", return.alleles = TRUE)
 
@@ -279,7 +282,7 @@ write.table(species.df, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNA
 # All Hetaerina samples
 # normal(offset,mean,sigma)
 # Titia divergence from SNAPP run without migration
-hist(rnorm(10000, 3.4, 0.1), breaks = 30)
+hist(rnorm(1000, 3.4, 0.1), breaks = 30)
 contrant.df <- data.frame(x = "normal(0,3.5,0.5)", y = "crown", 
                           z = paste0(sites.SNPS.short$basin_5,"-",sites.SNPS.short$samples, sep = ",",collapse = ""))
 # Americana/calverti
