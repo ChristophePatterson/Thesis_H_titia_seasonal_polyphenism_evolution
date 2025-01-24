@@ -168,7 +168,7 @@ gt[gt=="."] <- "?"
 
 # Rename file with population name
 colnames(gt)==sites.SNPS.short$Unique.ID
-colnames(gt) <- paste(sites.SNPS.short$basin_4, sites.SNPS.short$samples, sep = "_")
+colnames(gt) <- paste(sites.SNPS.short$basin_4, sites.SNPS.short$Unique.ID, sep = "_")
 
 # Create in put
 
@@ -180,7 +180,7 @@ write.nexus.data(t(gt), file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNA
 
 ## Set up files following https://github.com/mmatschiner/tutorials/blob/master/divergence_time_estimation_with_snp_data/README.md
 ## (1) Phylip file
-colnames(gt) <- sites.SNPS.short$samples
+colnames(gt) <- sites.SNPS.short$Unique.ID
 
 ape::write.dna(t(gt), file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNAPP-hydro_4_max_cov.phy"),
                format ="interleaved", nbcol = -1, colsep = "")
@@ -256,14 +256,14 @@ gt[gt=="."] <- "?"
 
 # Rename file with population name
 colnames(gt)==sites.SNPS.short$Unique.ID
-colnames(gt) <- paste(sites.SNPS.short$basin_5, sites.SNPS.short$samples, sep = "_")
+colnames(gt) <- paste(sites.SNPS.short$basin_5, sites.SNPS.short$Unique.ID, sep = "_")
 
 
 # Stats on how many samples and SNPs there are
 colnames(gt)
 dim(gt)
 
-ggplot(sites_sf[sites_sf$samples%in%max.coverage.basin_5,]) +
+ggplot(sites_sf[sites_sf$Unique.ID%in%max.coverage.basin_5,]) +
   geom_sf(data = hydrobasins_5, aes(fill = as.factor(HYBAS_ID)), show.legend = F) +
   geom_sf(size = 3)
 
@@ -282,7 +282,7 @@ colnames(gt) <- sites.SNPS.short$Unique.ID
 ape::write.dna(t(gt), file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNAPP-hydro_5_max_cov.phy"),
                format ="interleaved", nbcol = -1, colsep = "")
 ## (2) Species table
-species.df <- data.frame(species = paste0(sites.SNPS.short$basin_5,"-",sites.SNPS.short$Unique.ID), sample = sites.SNPS.short$samples)
+species.df <- data.frame(species = paste0(sites.SNPS.short$basin_5,"-",sites.SNPS.short$Unique.ID), sample = sites.SNPS.short$Unique.ID)
 write.table(species.df, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNAPP-hydro_5_max_cov.txt"),
             row.names = F,quote = F, sep = "\t")
 # (3) Theta priors from Stranding et al 2022
