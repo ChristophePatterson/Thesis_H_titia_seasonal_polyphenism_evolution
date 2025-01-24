@@ -41,6 +41,13 @@ sites <- merge(sites, sample_map, by.x = "samples", by.y = "Novogene.id")
 sites$Lat <- as.numeric(sites$Lat)
 sites$Long <- as.numeric(sites$Long)
 
+# Rename vcf with lab codes
+sites$Unique.ID[which(sites$Unique.ID=="TM01")] <- c("TM01c1", "TM01c2")
+colnames(vcf@gt) <- sites$Unique.ID[match(colnames(vcf@gt), sites$samples)]
+colnames(vcf@gt)[1] <- "FORMAT"
+colnames(vcf@gt)[duplicated(colnames(vcf@gt))]
+
+
 # Convert to sf
 dim(sites)
 sites_sf <- st_as_sf(sites, coords = c("Long", "Lat"))
@@ -57,9 +64,9 @@ samples_basin_5 <- st_intersection(hydrobasins_5, sites_sf)
 
 sites_sf[!sites_sf$samples%in%samples_basin_3$samples,]
 
-ggplot() +
-  geom_sf(data = hydrobasins_5, aes(fill = as.factor(HYBAS_ID)), show.legend = F) +
-  geom_sf(data = samples_basin_5, aes(fill = as.factor(HYBAS_ID)), size = 3, shape = 21, show.legend = F)
+# ggplot() +
+#  geom_sf(data = hydrobasins_5, aes(fill = as.factor(HYBAS_ID)), show.legend = F) +
+#  geom_sf(data = samples_basin_5, aes(fill = as.factor(HYBAS_ID)), size = 3, shape = 21, show.legend = F)
 
 #number of river basins assigned to samples
 length(unique(samples_basin_3$HYBAS_ID))
@@ -84,8 +91,8 @@ sites$basin_5 <- samples_basin_5$HYBAS_ID
 sites$covarage <- sample.miss
 
 # Get the sample which the highest coverage for each river basin
-max.coverage.basin_4 <- mapply(unique(sites$basin_4), FUN = function(x) sites$samples[sites$basin_4==x][which.max(sites$covarage[sites$basin_4==x])])
-max.coverage.basin_5 <- mapply(unique(sites$basin_5), FUN = function(x) sites$samples[sites$basin_5==x][which.max(sites$covarage[sites$basin_5==x])])
+max.coverage.basin_4 <- mapply(unique(sites$basin_4), FUN = function(x) sites$Unique.ID[sites$basin_4==x][which.max(sites$covarage[sites$basin_4==x])])
+max.coverage.basin_5 <- mapply(unique(sites$basin_5), FUN = function(x) sites$Unique.ID[sites$basin_5==x][which.max(sites$covarage[sites$basin_5==x])])
 
 
 # Get random N samples from each hydrobasins
@@ -107,7 +114,7 @@ rand.basin_5
 # max.coverage.basin_5 <- do.call("c", max.coverage.basin_5)
 
 
-ggplot(sites[sites$samples%in%max.coverage.basin_5,]) +
+ggplot(sites[sites$Unique.ID%in%max.coverage.basin_5,]) +
   geom_sf(data = hydrobasins_5, aes(fill = as.factor(HYBAS_ID)), show.legend = F) +
   geom_point(aes(Long, Lat, size = covarage))
 
@@ -118,7 +125,7 @@ ggplot(sites[sites$samples%in%max.coverage.basin_5,]) +
 
 #Subset geneid to the top coverage samples
 my_genind_ti_SNPs.short <- my_genind_ti[max.coverage.basin_4,]
-sites.SNPS.short <- sites[sites$samples%in%max.coverage.basin_4,]
+sites.SNPS.short <- sites[sites$Unique.ID%in%max.coverage.basin_4,]
 
 #Remove non-varient sites
 SNP.allele.num <- vector()
@@ -132,7 +139,7 @@ table(SNP.allele.num)
 my_genind_ti_SNPs.short <- my_genind_ti_SNPs.short[,SNP.allele.num!=1]
 
 # Get smaples from vcf file
-vcf.bi.short <- vcf.bi[,c("FORMAT",sites.SNPS.short$samples)]
+vcf.bi.short <- vcf.bi[,c("FORMAT",sites.SNPS.short$Unique.ID)]
 poly.snps <- substr(colnames(my_genind_ti_SNPs.short@tab), start = 1, stop =  nchar(colnames(my_genind_ti_SNPs.short@tab))-2)
 all_snps <- paste(vcf.bi.short@fix[,1],vcf.bi.short@fix[,2], sep = "_")
 
@@ -160,7 +167,7 @@ gt[gt=="T/A"] <- "W"
 gt[gt=="."] <- "?"
 
 # Rename file with population name
-colnames(gt)==sites.SNPS.short$samples
+colnames(gt)==sites.SNPS.short$Unique.ID
 colnames(gt) <- paste(sites.SNPS.short$basin_4, sites.SNPS.short$samples, sep = "_")
 
 # Create in put
@@ -178,7 +185,7 @@ colnames(gt) <- sites.SNPS.short$samples
 ape::write.dna(t(gt), file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNAPP-hydro_4_max_cov.phy"),
                format ="interleaved", nbcol = -1, colsep = "")
 ## (2) Species table
-species.df <- data.frame(species = sites.SNPS.short$basin_4, sample = sites.SNPS.short$samples)
+species.df <- data.frame(species = sites.SNPS.short$basin_4, sample = sites.SNPS.short$Unique.ID)
 write.table(species.df, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNAPP-hydro_4_max_cov.txt"),
             row.names = F,quote = F, sep = "\t")
 # (3) Theta priors from Stranding et al 2022
@@ -202,11 +209,11 @@ write.table(contrant.df, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SN
 
 
 #Subset geneid to the top coverage samples
-max.coverage.basin_5 <- mapply(unique(sites$basin_5), FUN = function(x) sites$samples[sites$basin_5==x][which.max(sites$covarage[sites$basin_5==x])])
+max.coverage.basin_5 <- mapply(unique(sites$basin_5), FUN = function(x) sites$Unique.ID[sites$basin_5==x][which.max(sites$covarage[sites$basin_5==x])])
 
 
 my_genind_ti_SNPs.short <- my_genind_ti[max.coverage.basin_5,]
-sites.SNPS.short <- sites[sites$samples%in%max.coverage.basin_5,]
+sites.SNPS.short <- sites[sites$Unique.ID%in%max.coverage.basin_5,]
 
 #Remove non-varient sites
 SNP.allele.num <- vector()
@@ -220,7 +227,7 @@ table(SNP.allele.num)
 my_genind_ti_SNPs.short <- my_genind_ti_SNPs.short[,SNP.allele.num!=1]
 
 # Get smaples from vcf file
-vcf.bi.short <- vcf.bi[,c("FORMAT",sites.SNPS.short$samples)]
+vcf.bi.short <- vcf.bi[,c("FORMAT",sites.SNPS.short$Unique.ID)]
 poly.snps <- substr(colnames(my_genind_ti_SNPs.short@tab), start = 1, stop =  nchar(colnames(my_genind_ti_SNPs.short@tab))-2)
 all_snps <- paste(vcf.bi.short@fix[,1],vcf.bi.short@fix[,2], sep = "_")
 
@@ -248,7 +255,7 @@ gt[gt=="T/A"] <- "W"
 gt[gt=="."] <- "?"
 
 # Rename file with population name
-colnames(gt)==sites.SNPS.short$samples
+colnames(gt)==sites.SNPS.short$Unique.ID
 colnames(gt) <- paste(sites.SNPS.short$basin_5, sites.SNPS.short$samples, sep = "_")
 
 
@@ -270,12 +277,12 @@ write.nexus.data(t(gt), file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNA
 
 ## Set up files following https://github.com/mmatschiner/tutorials/blob/master/divergence_time_estimation_with_snp_data/README.md
 ## (1) Phylip file
-colnames(gt) <- sites.SNPS.short$samples
+colnames(gt) <- sites.SNPS.short$Unique.ID
 
 ape::write.dna(t(gt), file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNAPP-hydro_5_max_cov.phy"),
                format ="interleaved", nbcol = -1, colsep = "")
 ## (2) Species table
-species.df <- data.frame(species = paste0(sites.SNPS.short$basin_5,"-",sites.SNPS.short$samples), sample = sites.SNPS.short$samples)
+species.df <- data.frame(species = paste0(sites.SNPS.short$basin_5,"-",sites.SNPS.short$Unique.ID), sample = sites.SNPS.short$samples)
 write.table(species.df, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNAPP-hydro_5_max_cov.txt"),
             row.names = F,quote = F, sep = "\t")
 # (3) Theta priors from Stranding et al 2022
@@ -284,7 +291,7 @@ write.table(species.df, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNA
 # Titia divergence from SNAPP run without migration
 hist(rnorm(1000, 3.4, 0.1), breaks = 30)
 contrant.df <- data.frame(x = "normal(0,3.5,0.5)", y = "crown", 
-                          z = paste0(sites.SNPS.short$basin_5,"-",sites.SNPS.short$samples, sep = ",",collapse = ""))
+                          z = paste0(sites.SNPS.short$basin_5,"-",sites.SNPS.short$Unique.ID, sep = ",",collapse = ""))
 # Americana/calverti
 #remove trailing comma
 contrant.df$z <- substr(contrant.df$z, start = 1 , stop = nchar(contrant.df$z)-1)
