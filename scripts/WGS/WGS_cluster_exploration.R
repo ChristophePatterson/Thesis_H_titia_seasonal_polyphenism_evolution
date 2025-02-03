@@ -112,7 +112,6 @@ p <- ggplot(phen) +
 
 ggsave("plots/cluster_exploration/clusters_mapped.pdf", q + p, height = 10,width = 15)
 
-
 ### Building up clusters to basins outside of the sampled ones
 
 ## Identified clusters
@@ -140,6 +139,14 @@ all_hydro <- unlist(clusters)
 miss_hydro <- WGS_hydro5[which(!WGS_hydro5$hydro5%in%all_hydro),]$hydro5
 # Hydrobasins that have been assigned to basin without direct WGS samples
 extra_hydro <- all_hydro[!all_hydro%in%WGS_hydro5$hydro5]
+
+# Loop that assigns each phenotype to a sample
+phen$WGS_hydro_ID_5 <- NA
+for(i in 1:length(clusters)){
+  phen$WGS_hydro_ID_5[phen$HYBAS_ID_5%in%clusters[[i]]] <- paste0("Clust",i)
+}
+# Breakdown of assignment
+summary(as.factor(phen$WGS_hydro_ID_5))
 
 p <- ggplot(phen[!is.na(phen$WGS_hydro_ID_5),]) +
   geom_sf(data = world_map) +
