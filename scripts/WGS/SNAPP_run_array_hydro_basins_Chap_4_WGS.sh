@@ -1,9 +1,9 @@
 #!/bin/bash
 
-#SBATCH -c 64 
+#SBATCH -c 124 
 #SBATCH --mem=15G            # memory required, in units of k,M or G, up to 250G.
 #SBATCH --gres=tmp:15G       # $TMPDIR space required on each compute node, up to 400G.
-#SBATCH -t 40:00:00         # time limit in format dd-hh:mm:ss
+#SBATCH -t 71:59:00         # time limit in format dd-hh:mm:ss
 #SBATCH --output=/nobackup/tmjj24/slurm-%x.%j.out
 
 # Commands to execute start here
@@ -35,7 +35,7 @@ ruby /home/tmjj24/scripts/job_scripts/Master-demulitiplex-scripts/ddRAD_Durham_a
 
 ## ALERT I HAVE CHANGED THE LOCATION OF BEAST FROM HOME TO NOBACKUP SINCE RUNNING THIS SCRIPT AS SUCH PREPARE FOR ERRORS
 
-/nobackup/tmjj24/apps/beast/bin/beast -threads 64 -overwrite $phy_file.xml > $phy_file.screen.log
+/nobackup/tmjj24/apps/beast/bin/beast -threads 124 -overwrite $phy_file.xml > $phy_file.screen.log
 
 /nobackup/tmjj24/apps/beast/bin/treeannotator -burnin 10 $phy_file.trees $phy_file.trees.Anon
 
