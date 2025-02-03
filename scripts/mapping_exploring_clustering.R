@@ -82,7 +82,7 @@ p<-ggplot() + geom_polygon(data = NAm_map, aes(x=long, y = lat,group=group),fill
 
 col_pal <- rainbow(13)
 
-p+geom_sf(data=subset(hydrobasins05.sub,HYBAS_ID==7050000010),aes(fill=col_pal[1])) +
+pp <- p+geom_sf(data=subset(hydrobasins05.sub,HYBAS_ID==7050000010),aes(fill=col_pal[1])) +
 	geom_sf(data=subset(hydrobasins05.sub,HYBAS_ID%in%c(7050004220, 7050005420)),aes(fill=col_pal[2]))+
   geom_sf(data=subset(hydrobasins05.sub,HYBAS_ID%in%c(7050047850, 7050736840, 7050047980, 7050048620)),aes(fill=col_pal[3])) +
   geom_sf(data=subset(hydrobasins05.sub,HYBAS_ID%in%c(7050668250, 7050741770, 7050682360)),aes(fill=col_pal[4])) +
@@ -95,3 +95,7 @@ p+geom_sf(data=subset(hydrobasins05.sub,HYBAS_ID==7050000010),aes(fill=col_pal[1
   geom_sf(data=subset(hydrobasins05.sub,HYBAS_ID%in%c(7050041410, 7050453940, 7050494360)),aes(fill=col_pal[11])) +
   geom_sf(data=subset(hydrobasins05.sub,HYBAS_ID%in%c(7050609780)),aes(fill=col_pal[12])) +
   geom_sf(data=subset(hydrobasins05.sub,HYBAS_ID%in%c(7050511950, 7050531210)),aes(fill=col_pal[13]))
+
+pdf("plots/cluster_exploration/hydrobasins05_phylo_clusters.pdf")
+pp
+dev.off()
