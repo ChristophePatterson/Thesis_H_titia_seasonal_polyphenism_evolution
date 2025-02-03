@@ -47,6 +47,9 @@ colnames(vcf@gt) <- sites$Unique.ID[match(colnames(vcf@gt), sites$samples)]
 colnames(vcf@gt)[1] <- "FORMAT"
 colnames(vcf@gt)[duplicated(colnames(vcf@gt))]
 
+# Remove CUAJ samples
+vcf <- vcf[,!grepl("CUAJ", colnames(vcf@gt))]
+sites <- sites[!grepl("CUAJ", sites$Unique.ID),]
 
 # Convert to sf
 dim(sites)
@@ -55,7 +58,7 @@ dim(sites_sf)
 sf_use_s2(FALSE)
 st_crs(sites_sf) <- st_crs(hydrobasins_4)
 
-plot(sites_sf)
+plot(sites_sf[1])
 
 # Extract basin info for each sample point
 samples_basin_3 <- st_intersection(hydrobasins_3, sites_sf)
@@ -94,7 +97,6 @@ sites$covarage <- sample.miss
 max.coverage.basin_4 <- mapply(unique(sites$basin_4), FUN = function(x) sites$Unique.ID[sites$basin_4==x][which.max(sites$covarage[sites$basin_4==x])])
 max.coverage.basin_5 <- mapply(unique(sites$basin_5), FUN = function(x) sites$Unique.ID[sites$basin_5==x][which.max(sites$covarage[sites$basin_5==x])])
 
-
 # Get random N samples from each hydrobasins
 run.num <- 5
 N <- 1
@@ -113,7 +115,6 @@ for(run in 1:run.num){
 rand.basin_5
 # max.coverage.basin_5 <- do.call("c", max.coverage.basin_5)
 
-
 ggplot(sites[sites$Unique.ID%in%max.coverage.basin_5,]) +
   geom_sf(data = hydrobasins_5, aes(fill = as.factor(HYBAS_ID)), show.legend = F) +
   geom_point(aes(Long, Lat, size = covarage))
@@ -121,7 +122,6 @@ ggplot(sites[sites$Unique.ID%in%max.coverage.basin_5,]) +
 ####################
 ## HYDROBASINS 4 ###
 ####################
-
 
 #Subset geneid to the top coverage samples
 my_genind_ti_SNPs.short <- my_genind_ti[max.coverage.basin_4,]
@@ -211,7 +211,6 @@ write.table(contrant.df, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SN
 #Subset geneid to the top coverage samples
 max.coverage.basin_5 <- mapply(unique(sites$basin_5), FUN = function(x) sites$Unique.ID[sites$basin_5==x][which.max(sites$covarage[sites$basin_5==x])])
 
-
 my_genind_ti_SNPs.short <- my_genind_ti[max.coverage.basin_5,]
 sites.SNPS.short <- sites[sites$Unique.ID%in%max.coverage.basin_5,]
 
@@ -290,7 +289,7 @@ write.table(species.df, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNA
 # normal(offset,mean,sigma)
 # Titia divergence from SNAPP run without migration
 hist(rnorm(1000, 3.4, 0.1), breaks = 30)
-contrant.df <- data.frame(x = "normal(0,3.5,0.5)", y = "crown", 
+contrant.df <- data.frame(x = "normal(0,3.5,0.1)", y = "crown", 
                           z = paste0(sites.SNPS.short$basin_5,"-",sites.SNPS.short$Unique.ID, sep = ",",collapse = ""))
 # Americana/calverti
 #remove trailing comma
