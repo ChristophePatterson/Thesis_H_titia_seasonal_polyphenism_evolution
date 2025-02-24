@@ -33,7 +33,7 @@ tiplabels()
 tree.phylo.r1 <- paintSubTree(tree.phylo, node = 9, state = "All")
 tree.phylo.r2.P <- paintSubTree(tree.phylo, node=10, state="Pacific", anc.state="group_1",stem=TRUE)
 # Separate most northern lineage 
-tree.phylo.r2.HL <- paintSubTree(tree.phylo, node=6, state="High_Lat", anc.state="group_1",stem=TRUE)
+tree.phylo.r2.HL <- paintSubTree(tree.phylo, node=3, state="High_Lat", anc.state="group_1",stem=TRUE)
 # Separate both Pacific and most northern
 tree.phylo.r3.HL.P <- paintSubTree(tree.phylo.r2.HL, node=10, state="Pacific", anc.state="group_1",stem=TRUE)
 
@@ -56,7 +56,6 @@ dev.off()
 ## Brownian model with co-evolution
 modelBM.ce <- mvBM(data = as.matrix(var.mean), error = as.matrix(var.sq.se), tree = tree.phylo.r1)
 ## Brownian model without co-evolution
-# NOTE CHECK WITH JONATHAN THAT THIS IS CORRECT
 no.ce.matrix <- matrix(c(1,NA,NA,1), nrow = 2)
 modelBM.no.ce <- mvBM(data = as.matrix(var.mean), error = as.matrix(var.sq.se), tree = tree.phylo.r1, 
                       param = list(constraint = no.ce.matrix))
@@ -107,6 +106,11 @@ modelOUr1.ce <- mvOU(data = as.matrix(var.mean), error = as.matrix(var.sq.se), t
 modelOUr1.no.ce <- mvOU(data = as.matrix(var.mean), error = as.matrix(var.sq.se), tree = tree.phylo.r1,
                         param = list(sigma="constraint", alpha="constraint"))
 
+modelOUr1.no.ce.sigma <- mvOU(data = as.matrix(var.mean), error = as.matrix(var.sq.se), tree = tree.phylo.r1,
+                        param = list(sigma="constraint"))
+modelOUr1.no.ce.alpha <- mvOU(data = as.matrix(var.mean), error = as.matrix(var.sq.se), tree = tree.phylo.r1,
+                              param = list(alpha="constraint"))
+
 
 # table results
 all.results <- list(modelBM.ce, modelBM.no.ce, modelOUr1.ce, modelOUr1.no.ce)
@@ -118,6 +122,37 @@ all.AIC.df$regimes <- "r1"
 write.table(all.AIC.df[order(all.AIC.df$AIC, decreasing = F),], file = "data/models/AICc_model_co-evolve_comparison.txt")
 
 best.model <- all.results[[which.min(all.AIC$AIC)]]
+
+
+##SINCE coevolution isn't supported, try fitting each trait separately
+
+#PEAK
+# Test for different selective regimes
+# Model brownian motion
+modelBM1.peak <- mvBM(data = as.matrix(var.mean[,1]), error = as.matrix(var.sq.se)[,1], tree = tree.phylo.r1)
+# Model OU using varying different regimes
+modelOUr1.peak <- mvOU(data = as.matrix(var.mean[,1]), error = as.matrix(var.sq.se[,1]), tree = tree.phylo)
+modelOUr2.P.peak <- mvOU(data = as.matrix(var.mean[,1]), error = as.matrix(var.sq.se[,1]), tree = tree.phylo.r2.P)
+modelOUr2.HL.peak <- mvOU(data = as.matrix(var.mean[,1]), error = as.matrix(var.sq.se[,1]), tree = tree.phylo.r2.HL)
+modelOUr3.HL.P.peak <- mvOU(data = as.matrix(var.mean[,1]), error = as.matrix(var.sq.se[,1]), tree = tree.phylo.r3.HL.P)
+
+results.peak <- list(modelBM1.peak, modelOUr1.peak, modelOUr2.P.peak, modelOUr2.HL.peak, modelOUr3.HL.P.peak)
+weights.peak <- aicw(results.peak, aicc = TRUE)
+
+
+#TROUGH
+# Test for different selective regimes
+# Model brownian motion
+modelBM1.trough <- mvBM(data = as.matrix(var.mean[,2]), error = as.matrix(var.sq.se)[,2], tree = tree.phylo.r1)
+# Model OU using varying different regimes
+modelOUr1.trough <- mvOU(data = as.matrix(var.mean[,2]), error = as.matrix(var.sq.se[,2]), tree = tree.phylo)
+modelOUr2.P.trough <- mvOU(data = as.matrix(var.mean[,2]), error = as.matrix(var.sq.se[,2]), tree = tree.phylo.r2.P)
+modelOUr2.HL.trough <- mvOU(data = as.matrix(var.mean[,2]), error = as.matrix(var.sq.se[,2]), tree = tree.phylo.r2.HL)
+modelOUr3.HL.P.trough <- mvOU(data = as.matrix(var.mean[,2]), error = as.matrix(var.sq.se[,2]), tree = tree.phylo.r3.HL.P)
+
+results.trough <- list(modelBM1.trough, modelOUr1.trough, modelOUr2.P.trough, modelOUr2.HL.trough, modelOUr3.HL.P.trough)
+weights.trough <- aicw(results.trough, aicc = TRUE)
+
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 #### LRT model comparison ####

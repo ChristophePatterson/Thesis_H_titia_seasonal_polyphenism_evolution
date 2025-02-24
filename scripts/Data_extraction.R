@@ -10,17 +10,21 @@ library(tidyverse)
 
 # Raw phenotype data
 raw.pheno <- read.csv("data/MASTER_titia_phenotypes_v1.0.csv")
-peak.trough <- read.csv("data/peak_trough_v1.0.csv")
+peak.trough <- read.csv("data/peak_trough_v2.0_logit.csv")
 peak.trough.season <- read.csv("data/peak_trough_season_dates.csv")
 
 # read in tree
-tree <- treeio::read.mega(file = "data/SNAPP/Hetaerina_titia_ddRAD_titia_dg-SNAPP-hydro_5_max_cov.trees_old.Anon")
+#tree <- treeio::read.mega(file = "data/SNAPP/Hetaerina_titia_ddRAD_titia_dg-SNAPP-hydro_5_max_cov.trees_old.Anon")
 # Get in ape phylo format
-tree.phylo <- tree@phylo
+#tree.phylo <- tree@phylo
 # Remove tips that arn't retained in cluster
-tree.phylo <- drop.tip(tree.phylo, tip = which(!tree.phylo$tip.label%in%peak.trough$treename))
+#tree.phylo <- drop.tip(tree.phylo, tip = which(!tree.phylo$tip.label%in%peak.trough$treename))
+
+tree.phylo <-ape::read.tree(file="data/titia_tree_trimmed.tree")
+
 # Rename tips based on cluster names
 tree.phylo$tip.label <- peak.trough$CLUSTER[match(tree.phylo$tip.label, peak.trough$treename)]
+
 # Convert to ggtree
 tree.plot <- ggtree(tree.phylo, size = 1.2) + geom_tiplab(size = 6)
 # Get order in which trees are plotted
