@@ -7,6 +7,7 @@ library(patchwork)
 library(ggtree)
 library(lubridate)
 library(tidyverse)
+library(Rphylopars)
 
 # Raw phenotype data
 raw.pheno <- read.csv("data/MASTER_titia_phenotypes_v1.0.csv")

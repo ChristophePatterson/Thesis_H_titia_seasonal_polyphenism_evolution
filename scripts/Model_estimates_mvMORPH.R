@@ -56,7 +56,7 @@ dev.off()
 ## Brownian model with co-evolution
 modelBM.ce <- mvBM(data = as.matrix(var.mean), error = as.matrix(var.sq.se), tree = tree.phylo.r1)
 ## Brownian model without co-evolution
-no.ce.matrix <- matrix(c(1,NA,NA,1), nrow = 2)
+no.ce.matrix <- matrix(c(1,NA,NA,2), nrow = 2)
 modelBM.no.ce <- mvBM(data = as.matrix(var.mean), error = as.matrix(var.sq.se), tree = tree.phylo.r1, 
                       param = list(constraint = no.ce.matrix))
 # Model comparison using corrected Akaike's Information Criterion
@@ -153,6 +153,20 @@ modelOUr3.HL.P.trough <- mvOU(data = as.matrix(var.mean[,2]), error = as.matrix(
 results.trough <- list(modelBM1.trough, modelOUr1.trough, modelOUr2.P.trough, modelOUr2.HL.trough, modelOUr3.HL.P.trough)
 weights.trough <- aicw(results.trough, aicc = TRUE)
 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+#### Model fitting with Rphylopars ####
+# OU estimation isn't working well with mvMORPH; try estimating parameters using Rphylopars, which can incorporate *all* observations
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+rphylopars_data<-read.csv("data/rphylopars_data.csv")
+
+peak.data.rphylopars = subset(rphylopars_data,time=="peak")[,1:2]
+rBM_peak <- phylopars(trait_data = peak.data.rphylopars,tree = tree.phylo, model = "BM")
+rOU_peak <- phylopars(trait_data = peak.data.rphylopars,tree = tree.phylo, model = "OU")
+
+trough.data.rphylopars = subset(rphylopars_data,time=="trough")[,1:2]
+rBM_trough <- phylopars(trait_data = trough.data.rphylopars,tree = tree.phylo, model = "BM")
+rOU_trough <- phylopars(trait_data = trough.data.rphylopars,tree = tree.phylo, model = "OU")
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 #### LRT model comparison ####
@@ -165,11 +179,117 @@ weights.trough <- aicw(results.trough, aicc = TRUE)
 # Compare the statistic obtained on the observed to the null obtained by simulations.
 ## Number of simulations 
 nsims <- 1000
-asin.limits <- c(asin(sqrt(c(0,1))))
 
-### Brownian motion simualtion (not valid)
-modelBMr1.no.ce.sims <- mvSIM(tree = tree.phylo.r1, nsim = nsims, model = c("BM1"), param = modelBM.no.ce)
+### Brownian motion simualtion: can we actually reject BM as a possibility (i.e., if the data were BM, would we have erroneously detected OU)
+modelBMr1.no.ce.sims <- mvSIM(tree = tree.phylo.r1, nsim = nsims, error=as.matrix(var.sq.se), model = c("BM1"), param = modelBM.no.ce)
 
+res.mat <- matrix(nrow=nsims,ncol=13)
+colnames(res.mat)<-c("i","BM.all.AICc","OU.all.AICc","BM.all.selected","BM.all.wi","BM.peak.AICc","OU.peak.AICc","BM.peak.selected","BM.peak.wi","BM.trough.AICc","OU.trough.AICc","BM.trough.selected","BM.trough.wi")
+for(i in 1:nsims){
+  i.dat = modelBMr1.no.ce.sims[[i]]
+   #need to sort matrix according to tip.labels
+  i.dat = i.dat[rownames(as.matrix(var.sq.se)),]
+  BM1.i_all <- mvBM(data = i.dat, error = as.matrix(var.sq.se), tree = tree.phylo.r1, param = list(constraint = no.ce.matrix))
+  OU1.i_all <- mvOU(data = i.dat, error = as.matrix(var.sq.se), tree = tree.phylo.r1,
+                          param = list(sigma="constraint", alpha="constraint"))
+  BM1.i_peak <- mvBM(data = i.dat[,1], error = as.matrix(var.sq.se)[,1], tree = tree.phylo.r1)
+  OU1.i_peak <- mvOU(data = i.dat[,1], error = as.matrix(var.sq.se)[,1], tree = tree.phylo.r1)
+  BM1.i_trough <- mvBM(data = i.dat[,2], error = as.matrix(var.sq.se)[,2], tree = tree.phylo.r1)
+  OU1.i_trough <- mvOU(data = i.dat[,2], error = as.matrix(var.sq.se)[,2], tree = tree.phylo.r1)
+  
+  res.mat[i,]<-c(i,BM1.i_all$AICc,OU1.i_all$AICc,ifelse(BM1.i_all$AICc-OU1.i_all$AICc > 2, 0, 1),exp(-0.5*(BM1.i_all$AICc-min(BM1.i_all$AICc,OU1.i_all$AICc)))/(exp(-0.5*(BM1.i_all$AICc-min(BM1.i_all$AICc,OU1.i_all$AICc)))+exp(-0.5*(OU1.i_all$AICc-min(BM1.i_all$AICc,OU1.i_all$AICc)))),BM1.i_peak$AICc,OU1.i_peak$AICc,ifelse(BM1.i_peak$AICc-OU1.i_peak$AICc > 2, 0, 1),exp(-0.5*(BM1.i_peak$AICc-min(BM1.i_peak$AICc,OU1.i_peak$AICc)))/(exp(-0.5*(BM1.i_peak$AICc-min(BM1.i_peak$AICc,OU1.i_peak$AICc)))+exp(-0.5*(OU1.i_peak$AICc-min(BM1.i_peak$AICc,OU1.i_peak$AICc)))),BM1.i_trough$AICc,OU1.i_trough$AICc,ifelse(BM1.i_trough$AICc-OU1.i_trough$AICc > 2, 0, 1),exp(-0.5*(BM1.i_trough$AICc-min(BM1.i_trough$AICc,OU1.i_trough$AICc)))/(exp(-0.5*(BM1.i_trough$AICc-min(BM1.i_trough$AICc,OU1.i_trough$AICc)))+exp(-0.5*(OU1.i_trough$AICc-min(BM1.i_trough$AICc,OU1.i_trough$AICc)))))
+  
+}
+
+res.mat<-as.data.frame(res.mat)
+table(res.mat$BM.all.selected)
+table(res.mat$BM.peak.selected)
+table(res.mat$BM.trough.selected)
+
+#when simulating data with BM, BM is recovered just fine--evidence that we haven't overfit with OU
+
+
+
+
+##Now checking whether OU1 is favoured when the true generating model is OUM
+
+modelOUr2.P.no.ce.sims <- mvSIM(tree = tree.phylo.r2.P, nsim = nsims, error=as.matrix(var.sq.se), model = c("OUM"), param = modelOUr2.P.no.ce)
+modelOUr2.HL.no.ce.sims <- mvSIM(tree = tree.phylo.r2.HL, nsim = nsims, error=as.matrix(var.sq.se), model = c("OUM"), param = modelOUr2.HL.no.ce)
+modelOUr3.HL.P.no.ce.sims <- mvSIM(tree = tree.phylo.r3.HL.P, nsim = nsims, error=as.matrix(var.sq.se), model = c("OUM"), param = modelOUr3.HL.P.no.ce)
+
+
+res.mat2 <- matrix(nrow=nsims,ncol=37)
+colnames(res.mat2)<-c("i","OU12P.all.AICc","OUM2P.all.AICc","OUM2P.all.selected","OU12P.all.wi","OU12P.peak.AICc","OUM2P.peak.AICc","OUM2P.peak.selected","OU12P.peak.wi","OU12P.trough.AICc","OUM2P.trough.AICc","OUM2P.trough.selected","OU12P.trough.wi","OU12HL.all.AICc","OUM2HL.all.AICc","OUM2HL.all.selected","OU12HL.all.wi","OU12HL.peak.AICc","OUM2HL.peak.AICc","OUM2HL.peak.selected","OU12HL.peak.wi","OU12HL.trough.AICc","OUM2HL.trough.AICc","OUM2HL.trough.selected","OU12HL.trough.wi","OU13HLP.all.AICc","OUM3HLP.all.AICc","OUM3HLP.all.selected","OU13HLP.all.wi","OU13HLP.peak.AICc","OUM3HLP.peak.AICc","OUM3HLP.peak.selected","OU13HLP.peak.wi","OU13HLP.trough.AICc","OUM3HLP.trough.AICc","OUM3HLP.trough.selected","OU13HLP.trough.wi")
+
+for(i in 1:nsims){
+  i.dat_OUr2.P.no.ce = modelOUr2.P.no.ce.sims[[i]]
+  i.dat_OUr2.P.no.ce = i.dat_OUr2.P.no.ce[rownames(as.matrix(var.sq.se)),]   #need to sort matrix according to tip.labels
+
+  OU1.P.i_all <- mvOU(data = i.dat_OUr2.P.no.ce, error = as.matrix(var.sq.se), tree = tree.phylo.r1, param = list(sigma="constraint", alpha="constraint"))
+  OU2.P.i_all <- mvOU(data = i.dat_OUr2.P.no.ce, error = as.matrix(var.sq.se), tree = tree.phylo.r2.P, param = list(sigma="constraint", alpha="constraint"))
+  
+  OU1.P.i_peak <- mvOU(data = i.dat_OUr2.P.no.ce[,1], error = as.matrix(var.sq.se)[,1], tree = tree.phylo.r1)
+  OU2.P.i_peak <- mvOU(data = i.dat_OUr2.P.no.ce[,1], error = as.matrix(var.sq.se)[,1], tree = tree.phylo.r2.P)
+  
+  OU1.P.i_trough <- mvOU(data = i.dat_OUr2.P.no.ce[,2], error = as.matrix(var.sq.se)[,2], tree = tree.phylo.r1)
+  OU2.P.i_trough <- mvOU(data = i.dat_OUr2.P.no.ce[,2], error = as.matrix(var.sq.se)[,2], tree = tree.phylo.r2.P)
+  
+  i.dat_OUr2.HL.no.ce = modelOUr2.HL.no.ce.sims[[i]]
+  i.dat_OUr2.HL.no.ce = i.dat_OUr2.HL.no.ce[rownames(as.matrix(var.sq.se)),]   #need to sort matrix according to tip.labels
+  
+  OU1.HL.i_all <- mvOU(data = i.dat_OUr2.HL.no.ce, error = as.matrix(var.sq.se), tree = tree.phylo.r1, param = list(sigma="constraint", alpha="constraint"))
+  OU2.HL.i_all <- mvOU(data = i.dat_OUr2.HL.no.ce, error = as.matrix(var.sq.se), tree = tree.phylo.r2.HL, param = list(sigma="constraint", alpha="constraint"))
+  
+  OU1.HL.i_peak <- mvOU(data = i.dat_OUr2.HL.no.ce[,1], error = as.matrix(var.sq.se)[,1], tree = tree.phylo.r1)
+  OU2.HL.i_peak <- mvOU(data = i.dat_OUr2.HL.no.ce[,1], error = as.matrix(var.sq.se)[,1], tree = tree.phylo.r2.HL)
+  
+  OU1.HL.i_trough <- mvOU(data = i.dat_OUr2.HL.no.ce[,2], error = as.matrix(var.sq.se)[,2], tree = tree.phylo.r1)
+  OU2.HL.i_trough <- mvOU(data = i.dat_OUr2.HL.no.ce[,2], error = as.matrix(var.sq.se)[,2], tree = tree.phylo.r2.HL)
+  
+  
+  i.dat_OUr3.HL.P.no.ce = modelOUr3.HL.P.no.ce.sims[[i]]
+  i.dat_OUr3.HL.P.no.ce = i.dat_OUr3.HL.P.no.ce[rownames(as.matrix(var.sq.se)),]   #need to sort matrix according to tip.labels
+  
+  OU1.HL.P.i_all <- mvOU(data = i.dat_OUr3.HL.P.no.ce, error = as.matrix(var.sq.se), tree = tree.phylo.r1, param = list(sigma="constraint", alpha="constraint"))
+  OU3.HL.P.i_all <- mvOU(data = i.dat_OUr3.HL.P.no.ce, error = as.matrix(var.sq.se), tree = tree.phylo.r3.HL.P, param = list(sigma="constraint", alpha="constraint"))
+  
+  
+  OU1.HL.P.i_peak <- mvOU(data = i.dat_OUr3.HL.P.no.ce[,1], error = as.matrix(var.sq.se)[,1], tree = tree.phylo.r1)
+  OU3.HL.P.i_peak <- mvOU(data = i.dat_OUr3.HL.P.no.ce[,1], error = as.matrix(var.sq.se)[,1], tree = tree.phylo.r3.HL.P)
+  
+  OU1.HL.P.i_trough <- mvOU(data = i.dat_OUr3.HL.P.no.ce[,2], error = as.matrix(var.sq.se)[,2], tree = tree.phylo.r1)
+  OU3.HL.P.i_trough <- mvOU(data = i.dat_OUr3.HL.P.no.ce[,2], error = as.matrix(var.sq.se)[,2], tree = tree.phylo.r3.HL.P)
+  
+  
+
+  res.mat2[i,]<-c(i,OU1.P.i_all$AICc,OU2.P.i_all$AICc,ifelse(OU2.P.i_all$AICc-OU1.P.i_all$AICc > 2, 0, 1),exp(-0.5*(OU1.P.i_all$AICc-min(OU1.P.i_all$AICc,OU2.P.i_all$AICc)))/(exp(-0.5*(OU1.P.i_all$AICc-min(OU1.P.i_all$AICc,OU2.P.i_all$AICc)))+exp(-0.5*(OU2.P.i_all$AICc-min(OU1.P.i_all$AICc,OU2.P.i_all$AICc)))),OU1.P.i_peak$AICc,OU2.P.i_peak$AICc,ifelse(OU2.P.i_peak$AICc-OU1.P.i_peak$AICc > 2, 0, 1),exp(-0.5*(OU1.P.i_peak$AICc-min(OU1.P.i_peak$AICc,OU2.P.i_peak$AICc)))/(exp(-0.5*(OU1.P.i_peak$AICc-min(OU1.P.i_peak$AICc,OU2.P.i_peak$AICc)))+exp(-0.5*(OU2.P.i_peak$AICc-min(OU1.P.i_peak$AICc,OU2.P.i_peak$AICc)))),OU1.P.i_trough$AICc,OU2.P.i_trough$AICc,ifelse(OU2.P.i_trough$AICc-OU1.P.i_trough$AICc > 2, 0, 1),exp(-0.5*(OU1.P.i_trough$AICc-min(OU1.P.i_trough$AICc,OU2.P.i_trough$AICc)))/(exp(-0.5*(OU1.P.i_trough$AICc-min(OU1.P.i_trough$AICc,OU2.P.i_trough$AICc)))+exp(-0.5*(OU2.P.i_trough$AICc-min(OU1.P.i_trough$AICc,OU2.P.i_trough$AICc)))),OU1.P.i_all$AICc,OU2.HL.i_all$AICc,ifelse(OU2.HL.i_all$AICc-OU1.P.i_all$AICc > 2, 0, 1),exp(-0.5*(OU1.P.i_all$AICc-min(OU1.P.i_all$AICc,OU2.HL.i_all$AICc)))/(exp(-0.5*(OU1.P.i_all$AICc-min(OU1.P.i_all$AICc,OU2.HL.i_all$AICc)))+exp(-0.5*(OU2.HL.i_all$AICc-min(OU1.P.i_all$AICc,OU2.HL.i_all$AICc)))),OU1.P.i_peak$AICc,OU2.HL.i_peak$AICc,ifelse(OU2.HL.i_peak$AICc-OU1.P.i_peak$AICc > 2, 0, 1),exp(-0.5*(OU1.P.i_peak$AICc-min(OU1.P.i_peak$AICc,OU2.HL.i_peak$AICc)))/(exp(-0.5*(OU1.P.i_peak$AICc-min(OU1.P.i_peak$AICc,OU2.HL.i_peak$AICc)))+exp(-0.5*(OU2.HL.i_peak$AICc-min(OU1.P.i_peak$AICc,OU2.HL.i_peak$AICc)))),OU1.P.i_trough$AICc,OU2.HL.i_trough$AICc,ifelse(OU2.HL.i_trough$AICc-OU1.P.i_trough$AICc > 2, 0, 1),exp(-0.5*(OU1.P.i_trough$AICc-min(OU1.P.i_trough$AICc,OU2.HL.i_trough$AICc)))/(exp(-0.5*(OU1.P.i_trough$AICc-min(OU1.P.i_trough$AICc,OU2.HL.i_trough$AICc)))+exp(-0.5*(OU2.HL.i_trough$AICc-min(OU1.P.i_trough$AICc,OU2.HL.i_trough$AICc)))),OU1.P.i_all$AICc,OU3.HL.P.i_all$AICc,ifelse(OU3.HL.P.i_all$AICc-OU1.P.i_all$AICc > 2, 0, 1),exp(-0.5*(OU1.P.i_all$AICc-min(OU1.P.i_all$AICc,OU3.HL.P.i_all$AICc)))/(exp(-0.5*(OU1.P.i_all$AICc-min(OU1.P.i_all$AICc,OU3.HL.P.i_all$AICc)))+exp(-0.5*(OU3.HL.P.i_all$AICc-min(OU1.P.i_all$AICc,OU3.HL.P.i_all$AICc)))),OU1.P.i_peak$AICc,OU3.HL.P.i_peak$AICc,ifelse(OU3.HL.P.i_peak$AICc-OU1.P.i_peak$AICc > 2, 0, 1),exp(-0.5*(OU1.P.i_peak$AICc-min(OU1.P.i_peak$AICc,OU3.HL.P.i_peak$AICc)))/(exp(-0.5*(OU1.P.i_peak$AICc-min(OU1.P.i_peak$AICc,OU3.HL.P.i_peak$AICc)))+exp(-0.5*(OU3.HL.P.i_peak$AICc-min(OU1.P.i_peak$AICc,OU3.HL.P.i_peak$AICc)))),OU1.P.i_trough$AICc,OU3.HL.P.i_trough$AICc,ifelse(OU3.HL.P.i_trough$AICc-OU1.P.i_trough$AICc > 2, 0, 1),exp(-0.5*(OU1.P.i_trough$AICc-min(OU1.P.i_trough$AICc,OU3.HL.P.i_trough$AICc)))/(exp(-0.5*(OU1.P.i_trough$AICc-min(OU1.P.i_trough$AICc,OU3.HL.P.i_trough$AICc)))+exp(-0.5*(OU3.HL.P.i_trough$AICc-min(OU1.P.i_trough$AICc,OU3.HL.P.i_trough$AICc)))))
+                 
+                 
+}
+
+res.mat2<-as.data.frame(res.mat2)
+
+table(res.mat2$OUM2P.all.selected)
+table(res.mat2$OUM2P.peak.selected)
+table(res.mat2$OUM2P.trough.selected)
+
+table(res.mat2$OUM2HL.all.selected)
+table(res.mat2$OUM2HL.peak.selected)
+table(res.mat2$OUM2HL.trough.selected)
+
+table(res.mat2$OUM3HLP.all.selected)
+table(res.mat2$OUM3HLP.peak.selected)
+table(res.mat2$OUM3HLP.trough.selected)
+
+#There is very low power to detect multi-peak OU process--most multi-peak simulations favour single-peak OU in model selection
+
+
+##Now checking whether OU1 without covariance in alpha is favoured when the true generating model is OU1 with covariance in alpha
+
+modelOUr1.ce.alpha <- mvOU(data = as.matrix(var.mean), error = as.matrix(var.sq.se), tree = tree.phylo.r1, param = list(sigma="constraint"))
+modelOUr1.ce.alpha.sims <- mvSIM(tree = tree.phylo.r1, nsim = nsims, error=as.matrix(var.sq.se), model = c("OUM"), param = modelOUr1.ce.alpha)
+
+#simulation returns "incorrect number of dimensions" message--ask Julien how to proceed?
 
 # Number of simulations that exceed max extent of trait range
 sim.exceed.limits <- lapply(modelBMr1.no.ce.sims, function(x) any(x<asin.limits[1]|x>asin.limits[2]))
