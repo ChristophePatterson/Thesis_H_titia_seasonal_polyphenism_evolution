@@ -6,7 +6,7 @@ library(shadowtext)
 asin.limits <- c(asin(sqrt(c(0,1))))
 
 ## Get peak and trough values
-peak.trough$time.plot[peak.trough$time=="peak"] <- c(NA,rowMeans(peak.trough.season[,2:3]))
+peak.trough$time.plot[peak.trough$time=="peak"] <- rowMeans(peak.trough.season[,2:3])
 peak.trough$time.plot[peak.trough$time=="trough"] <- 330
 
 ## Plot of all data
@@ -18,14 +18,15 @@ raw.pheno$draft.estimate.prop.pigment.logit <- log( (raw.pheno$draft.estimate.pr
 
 # Plot1
 p.pheno <- ggplot(raw.pheno[!is.na(raw.pheno$CLUSTER),]) +
-  geom_point(aes(Julian.date, draft.estimate.prop.pigment.logit, fill = CLUSTER, alpha = cluster_season), shape = 21, show.legend = F) +
+  geom_point(aes(Julian.date, draft.estimate.prop.pigment.logit, fill = CLUSTER, alpha = cluster_season), size = 3, shape = 21, show.legend = F) +
   geom_point(data = peak.trough[peak.trough$CLUSTER!="all data"&!is.na(peak.trough$CLUSTER),], 
              aes(x = time.plot, y = mean, fill = CLUSTER), col = "black", shape = 23, size = 5, stroke = 1.5) +
-  geom_text_repel(data = peak.trough[peak.trough$CLUSTER!="all data"&!is.na(peak.trough$CLUSTER),], 
-                  aes(x = time.plot, y = mean, label = CLUSTER), size = 8, col = "black", min.segment.length = 0, show.legend = F, nudge_x = 20) +
+  geom_label_repel(data = peak.trough[peak.trough$CLUSTER!="all data"&!is.na(peak.trough$CLUSTER),], 
+                  aes(x = time.plot, y = mean, label = CLUSTER), fill = rgb(1,1,1,0.75), size = 8, col = "black", min.segment.length = 0, show.legend = F, nudge_x = 30) +
   # scale_color_manual(values = c("grey80", "darkred", "deepskyblue"), labels = c("off-season", "peak", "trough")) +
   scale_fill_manual(values = cbPalette) +
-  # ylim(c(asin.limits)) +
+  scale_alpha_manual(values = c(0.1,1,1)) +
+  ylim(c(-5, 5)) +
   ylab("Wing melanisation (logit)") +
   xlab("Day of Year") +
   theme_bw() +
@@ -83,10 +84,11 @@ map.plot <- ggplot(raw.pheno) +
 
 
 ## Tree plot
-tree.map <- (tree.plot + geom_tiplab(aes(x = x + 0.1), size = 6) + geom_tippoint(size = 3, aes(col = label), show.legend = F, ) + scale_color_manual(values = cbPalette, breaks = plot.tip.order) 
+tree.map <- (tree.plot + geom_tiplab(aes(x = x + 0.1), size = 6) + geom_tippoint(aes(fill = label), col = "black", shape = 23, size = 5, stroke = 1.5, show.legend = F, ) + scale_fill_manual(values = cbPalette, breaks = plot.tip.order) 
              + scale_x_continuous(expand = c(0.1, 0.1))) +  theme(text = element_text(size = 18))
 
-figure1 <- p.pheno + (tree.map + map.plot) + plot_layout(heights = c(2,2)) + plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")")
+figure1 <- p.pheno / (tree.map + map.plot) / guide_area() + plot_layout(heights = c(2,1.75, 0.2), guides = "collect") +
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")")
 
 ggsave("plots/Figure1.png", figure1, width = 7.24*1.8, height = 7.24*2)
 
