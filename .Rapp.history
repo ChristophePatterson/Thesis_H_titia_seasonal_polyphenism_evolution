@@ -1,0 +1,463 @@
+??phylosignal_network
+3642+729+314
+5964-4685
+478+344+263+443
+1528-1050
+219,00/3
+219/3
+202/3
+202.16/3
+42.11+78.83+86.58
+95.40/2
+library(terra)#
+library(tmap)#
+library(rgdal)#
+library(tmaptools)#
+library(sf)#
+#
+library(geiger)#
+library(phyloraster)
+tree<-read.tree("~/Downloads/singe_bird_phylo.tre")
+bird.geo<-read.csv("~/Downloads/Presence-Absence-Matrix_7-19-21.csv")
+r <- rast(ncol=180, nrow=90) #make a 1x1 degree raster#
+#
+for(i in 1:10){ #length(unique(bird.geo$Tip_Label))){ #project each species range into that raster#
+	bg.sub <- subset(bird.geo,Tip_Label==unique(bird.geo$Tip_Label)[i])#
+	if(i==1){#
+	br = rasterize(as.matrix(bg.sub[,6:7]),r)#
+	names(br) = unique(bird.geo$Tip_Label)[i]#
+	} else{#
+	new_layer=rasterize(as.matrix(bg.sub[,6:7]),r)#
+	names(new_layer)=unique(bird.geo$Tip_Label)[i]#
+	br = c(br, new_layer )#
+	}#
+	if(i%%100==0){print(i)}#
+}
+br
+plot(br)
+r <- rast(ncol=180, nrow=90) #make a 1x1 degree raster#
+#
+for(i in 1:1000){ #length(unique(bird.geo$Tip_Label))){ #project each species range into that raster#
+	bg.sub <- subset(bird.geo,Tip_Label==unique(bird.geo$Tip_Label)[i])#
+	if(i==1){#
+	br = rasterize(as.matrix(bg.sub[,6:7]),r)#
+	names(br) = unique(bird.geo$Tip_Label)[i]#
+	} else{#
+	new_layer=rasterize(as.matrix(bg.sub[,6:7]),r)#
+	names(new_layer)=unique(bird.geo$Tip_Label)[i]#
+	br = c(br, new_layer )#
+	}#
+	if(i%%100==0){print(i)}#
+}
+phylo.pres(x=br,tree=tree)
+dataprep <- phylo.pres(x=br,tree=tree)
+names(dataprep$x) == tree$tip.label
+tree.trimmed = keep.tip(tree,names(br))
+dataprep <- phylo.pres(x=br,tree=tree.trimmed)
+str(dataprep)
+pdr <- rast.pd(x = dataprep$x, dataprep$tree)
+plot(pdr$PD, main = "Phylogenetic diversity")
+plot(pdr$PD, main = "Phylogenetic diversity")
+pdr$PD
+pdr
+dataprep$x
+dataprep$tree
+plot(dataprep$tree)
+plot(dataprep$x)
+phyloraster:::rast.pd()
+phyloraster:::rast.pd
+?rast.pd()
+dataprep <- phylo.pres(x=br,tree=tree)
+pdr <- rast.pd(x = dataprep$x, dataprep$tree)
+plot(pdr)
+pdf
+pdr
+dataprep <- phylo.pres(x=subst(br,NA,0),tree=tree.trimmed)
+br
+pdr <- rast.pd(x = dataprep$x, dataprep$tree)
+plot(pdr)
+br <- subst(br,NA,0) #replace NAs with 0s#
+tree.trimmed <- keep.tip(tree,names(br)) #trim phylogeny to species present (could also keep entire phylogeny, to be discussed)#
+dataprep <- phylo.pres(x=br,tree=tree.trimmed)
+?rast()
+moll <- "+proj=moll +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
+moll <- "+proj=moll +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"#
+#
+r <- rast(ncol=180, nrow=90, crs=moll) #make a 1x1 degree raster, should revisit if this is too coarse
+r
+for(i in 1:1000){ #length(unique(bird.geo$Tip_Label))){ #project each species range into that raster#
+	bg.sub <- subset(bird.geo,Tip_Label==unique(bird.geo$Tip_Label)[i])#
+	if(i==1){#
+	br = rasterize(as.matrix(bg.sub[,6:7]),r)#
+	names(br) = unique(bird.geo$Tip_Label)[i]#
+	} else{#
+	new_layer=rasterize(as.matrix(bg.sub[,6:7]),r)#
+	names(new_layer)=unique(bird.geo$Tip_Label)[i]#
+	br = c(br, new_layer )#
+	}#
+	if(i%%100==0){print(i)}#
+}
+br <- subst(br,NA,0) #replace NAs with 0s#
+tree.trimmed <- keep.tip(tree,names(br)) #trim phylogeny to species present (could also keep entire phylogeny, to be discussed)#
+dataprep <- phylo.pres(x=br,tree=tree.trimmed)#
+#
+pdr <- rast.pd(x = dataprep$x, dataprep$tree) #create a raster with phylogenetic diversity#
+plot(pdr) #et voila
+br
+plot(br)
+plot(data.prep$x)
+plot(dataprep$x)
+br
+phyloraster:::rast.pd
+terra::is.lonlat(br)
+?is.lonlat()
+?is.lonlat
+log(0.4/(1-0.4))
+log(0.6/(1-0.6))
+seq(0.01,1)
+seq(0.01,1,length=100)
+0.99/0.01
+log(99)
+exp(6)
+exp(1.1)
+exp(100)
+exp(6)
+99.999/0.001
+1116+52\
+1116+52
+1116-(16+52)
+1100-734+1040
+1040-734
+509.2/4
+393.14/4
+zab<-read.csv("~/Dropbox/id_birds.csv")
+outmat<-matrix(nrow=length(sites),ncol=length(sites))#
+colnames(outmat)<-sites#
+rownames(outmat)<-sites#
+#
+for(i in 1:length(sites)){#
+	for(j in 1:length(sites)){#
+	ibirds = subset(zab, site==sites[i])$species#
+	jbirds = subset(zab, site==sites[j])$species#
+	outmat[i,j]<-sum(!ibirds%in%jbirds)#
+	}#
+#
+}
+head(id_birds)
+head(zab)
+sites<-unique(zab$site)#
+outmat<-matrix(nrow=length(sites),ncol=length(sites))#
+colnames(outmat)<-sites#
+rownames(outmat)<-sites#
+#
+for(i in 1:length(sites)){#
+	for(j in 1:length(sites)){#
+	ibirds = subset(zab, site==sites[i])$species#
+	jbirds = subset(zab, site==sites[j])$species#
+	outmat[i,j]<-sum(!ibirds%in%jbirds)#
+	}#
+#
+}
+outmat
+head(zab)
+length(unique(zab$species))
+zab<-read.csv("~/Dropbox/id_birds.csv")
+sites<-unique(zab$site)#
+outmat<-matrix(nrow=length(sites),ncol=length(sites))#
+colnames(outmat)<-sites#
+rownames(outmat)<-sites#
+#
+for(i in 1:length(sites)){#
+	for(j in 1:length(sites)){#
+	ibirds = subset(zab, site==sites[i])$species#
+	jbirds = subset(zab, site==sites[j])$species#
+	outmat[i,j]<-sum(!ibirds%in%jbirds)#
+	}#
+#
+}
+outmat
+regions<-unique(zab$region)#
+#
+outmat<-matrix(nrow=length(regions),ncol=length(regions))#
+colnames(outmat)<-regions#
+rownames(outmat)<-regions#
+#
+for(i in 1:length(regions)){#
+	for(j in 1:length(regions)){#
+	ibirds = unique(subset(zab, region==regions[i])$species)#
+	jbirds = unique(subset(zab, region==regions[j])$species)#
+	outmat[i,j]<-sum(!ibirds%in%jbirds)#
+	}#
+#
+}
+outmat
+790+155+64
+800*20+571+1011*2+1106
+800*19+571+1011*2+1106
+zab<-read.csv("~/Dropbox/id_birds.csv")
+regions<-unique(zab$region)#
+#
+outmat<-matrix(nrow=length(regions),ncol=length(regions))#
+colnames(outmat)<-regions#
+rownames(outmat)<-regions#
+#
+for(i in 1:length(regions)){#
+	for(j in 1:length(regions)){#
+	ibirds = unique(subset(zab, region==regions[i])$species)#
+	jbirds = unique(subset(zab, region==regions[j])$species)#
+	outmat[i,j]<-sum(!ibirds%in%jbirds)#
+	}#
+#
+}
+outmat
+length(unique(zab$species))
+sites<-unique(zab$site)#
+outmat<-matrix(nrow=length(sites),ncol=length(sites))#
+colnames(outmat)<-sites#
+rownames(outmat)<-sites#
+#
+for(i in 1:length(sites)){#
+	for(j in 1:length(sites)){#
+	ibirds = subset(zab, site==sites[i])$species#
+	jbirds = subset(zab, site==sites[j])$species#
+	outmat[i,j]<-sum(!ibirds%in%jbirds)#
+	}#
+#
+}
+outmat
+122+1050
+1200+1050
+900+200+650
+900 + 90 + 650
+1200+350+600
+1200+60+350+900
+1200+60+350+800
+700+360+200+650
+1200+300+100+600
+1900+100+90+650
+setwd("~/Thesis_H_titia_seasonal_polyphenism_evolution/data")
+require(ggplot2)#
+library(data.table)#
+require(gridExtra)#
+phen<-read.csv("data/MASTER_titia_phenotypes_v1.0.csv")
+ACI.curve <- function(P,data){ # inputs are parameters (P) and dataset#
+  # First, scale parameter values, this makes it easier for optim, as you feed it#
+  # parameters on the same scale#
+  (d.star<-P[1]/10)#
+  (sigma<-P[2]/20)#
+  (alpha1<-P[3]/1200)#
+  (alpha2<-P[4]/200000)#
+  (phi<-P[5]/10000)#
+  (z<-P[6]/250)#
+  if(alpha2>=alpha1){alpha2=alpha1-0.0001}#
+  lambda<-alpha2+(alpha1-alpha2)*exp(-(abs((c(data$date)-d.star)/sigma)^z)) # This is equation for function#
+  if (length(which(lambda==1))>0 | length(which(lambda==0))>0) LL.ind<-rep(-1000000,length(data$date)) else {#
+    a<-lambda/phi#
+    b<-(1-lambda)/phi#
+    LL.ind<-lgamma(a+b)-lgamma(a)-lgamma(b)+(a-1)*log(data$scaledACI+0.0001)+(b-1)*log(1-data$scaledACI+0.0001) # This calculates likelihood#
+  }#
+  return(sum(LL.ind)) # Sums likelihood across each value#
+}
+data<-phen[,c(10,40)]
+setwd("~/Thesis_H_titia_seasonal_polyphenism_evolution/d")
+setwd("~/Thesis_H_titia_seasonal_polyphenism_evolution/")
+require(ggplot2)#
+library(data.table)#
+require(gridExtra)#
+phen<-read.csv("data/MASTER_titia_phenotypes_v1.0.csv")
+data<-phen[,c(10,40)]
+data
+head(data)
+data<-data.frame(data)#
+    # Remove any NAs#
+data<-data[which(is.na(data[,2])==F),]#
+data<-data[which(is.na(data[,1])==F),]#
+colnames(data)[1]<-"date"#
+data$scaledACI<-(data[,2]-min(data[,2]))/(max(data[,2])-min(data[,2]))#
+    # Sequence of dates#
+date.seq<-seq(min(data[,1]),max(data[,1]),1)#
+#data<-data[order(data[,1]),]
+## Fit curve ###
+    initial<-c(1300,1000,1000,1000,1000,1000) # Initial parameter values, all on roughly same scale#
+    low<-c(1,200,100,1,1,250) # Min allowed parameter values#
+    high<-c(2000,2000,1200,10000,10000,5000) # Max allowed parameter values#
+    result<-optim(par=initial,fn=ACI.curve,data=data,method="L-BFGS-B",lower=low,upper=high,control=list(trace=1,fnscale=-1,maxit=1000)) # Run optim#
+    P.new<-c(result$par[1]/10,result$par[2]/20,result$par[3]/1200,result$par[4]/200000,result$par[5]/10000,result$par[6]/250) # Rescale parameters#
+    lambda<-P.new[4]+(P.new[3]-P.new[4])*exp(-(abs((date.seq-P.new[1])/(P.new[2]))^(P.new[6]))) # Fit function with fitted parameter values#
+    ### Differentiating ####
+    first.deriv<-(P.new[6]*exp(-((P.new[1]-date.seq)^2/P.new[2]^2)^(P.new[6]/2)) * ((P.new[1]-date.seq)^2/P.new[2]^2)^(P.new[6]/2)) / (P.new[1]-date.seq)#
+    second.deriv<-( P.new[6]*exp(-((P.new[1]-date.seq)^2/P.new[2]^2)^(P.new[6]/2)) * ((P.new[1]-date.seq)^2/P.new[2]^2)^((P.new[6]-2)/2) * (P.new[6]*(((P.new[1]-date.seq)^2/P.new[2]^2)^(P.new[6]/2) -1) +1) ) / (P.new[1]^2)#
+    deriv.data<-as.data.frame(cbind(first=first.deriv,second=second.deriv,date=date.seq))#
+    #plot(deriv.data$first~deriv.data$date,type="l") # Plot first derivative if you're interested#
+    #plot(deriv.data$second~deriv.data$date,type="l") # Plot second derivative if you're interested#
+    # Date of first max 2nd deritave#
+    max.second1<-which(deriv.data[deriv.data$date<=P.new[1],'second'] %in% max(deriv.data[deriv.data$date<=P.new[1],'second']))#
+    (date.max.second1<-deriv.data[deriv.data$date<=P.new[1],'date'][max.second1])#
+    # Date of second max 2nd deritave#
+    max.second2<-which(deriv.data[deriv.data$date>=P.new[1],'second'] %in% max(deriv.data[deriv.data$date>=P.new[1],'second']))#
+    (date.max.second2<-deriv.data[deriv.data$date>=P.new[1],'date'][max.second2])#
+    # Date of first max 2nd deritave#
+    max.first<-max(deriv.data[deriv.data$date<=P.new[1],'first'])#
+    max.first1<-which(deriv.data[deriv.data$date<=P.new[1],'first'] %in% max.first)#
+    (date.max.first<-deriv.data[deriv.data$date<=P.new[1],'date'][max.first1])#
+    (lambda.max.first<-P.new[4]+(P.new[3]-P.new[4])*exp(-(abs((date.max.first-P.new[1])/(P.new[2]))^(P.new[6]))))#
+    # Date of second max 2nd deritave#
+    min.first<-min(deriv.data[deriv.data$date>=P.new[1],'first'])#
+    min.first2<-which(deriv.data[deriv.data$date>=P.new[1],'first'] %in% min.first)#
+    (date.min.first<-deriv.data[deriv.data$date>=P.new[1],'date'][min.first2])#
+    (lambda.min.first<-P.new[4]+(P.new[3]-P.new[4])*exp(-(abs((date.min.first-P.new[1])/(P.new[2]))^(P.new[6]))))#
+    ### Plotting ####
+    with(data,plot(scaledACI~date,type="n",ylab="perched hindwing",xlab="date",xlim=c(0,365),main=names(data)[2])) # Plot#
+    ## Filling area under curve#
+    lambda.new<-P.new[4]+(P.new[3]-P.new[4])*exp(-(abs((seq(date.max.second1,date.max.second2,0.1)-P.new[1])/(P.new[2]))^(P.new[6])))#
+    lambda.one<-P.new[4]+(P.new[3]-P.new[4])*exp(-(abs((date.max.second1-P.new[1])/(P.new[2]))^(P.new[6])))#
+    lambda.growing<-P.new[4]+(P.new[3]-P.new[4])*exp(-(abs((seq(round(date.max.second1,0),round(date.max.second2,0),1)-P.new[1])/(P.new[2]))^(P.new[6])))#
+    x<-c(seq(date.max.second1,date.max.second2,0.1),rev(seq(date.max.second1,date.max.second2,0.1)))#
+    y<-c(lambda.new,rep(0,length(lambda.new)))#
+    pol <- cbind(x, y)#
+    polygon(x,y,col="light grey",border=NA)#
+    lines(lambda~date.seq,col=1,lwd=2)#
+    ## Add points#
+    with(data,points(scaledACI~date,col="dark grey"))#
+    ## Annotating#
+    # duration#
+    segments(date.max.second1,0,date.max.second1,.9,lty=2,col=2); text(date.max.second1,.93,"start",cex=0.9)#
+    segments(date.max.second2,0,date.max.second2,.9,lty=2,col=2); text(date.max.second2,.93,"end",cex=0.9)#
+    text(P.new[1],.85,"duration",cex=0.9)#
+    arrows(P.new[1]-15,.85,date.max.second1,.85,length=.1,col=2)#
+    arrows(P.new[1]+15,.85,date.max.second2,.85,length=.1,col=2)#
+    # sum#
+    text(P.new[1],.4,"sum",cex=0.9)#
+    # peak#
+    arrows(35,max(lambda),P.new[1],max(lambda),length=.1,col=2)#
+    text(25,max(lambda),"peak",cex=0.9)#
+    # rate#
+    arrows(35,lambda.max.first,date.max.first,lambda.max.first,length=.1,col=2)#
+    text(22,lambda.max.first,"max rate",cex=.9)#
+    arrows(225,lambda.min.first,date.min.first,lambda.min.first,length=.1,col=2)#
+    text(238,lambda.max.first,"min rate",cex=.9)
+require(Rphylopars)
+?phylopars()
+#this script calculates the peak and trough mean and standard error for each tip#
+#current data transformation is a logit, subtracting 0.01 from each value so 1 values don't hit Inf#
+setwd("~/Thesis_H_titia_seasonal_polyphenism_evolution")#
+phen<-read.csv("data/MASTER_titia_phenotypes_v1.0.csv")#
+peak.trough.season <- read.csv("data/peak_trough_season_dates.csv")#
+#as a result of the normalisation of non standard manual measurements, a few measurements are very small#
+#consequently, removing all values < 0.05 (the smallest hindwingspot in a standard manually measured wing)#
+#this removes 35 data points#
+#
+phen<-subset(phen,draft.estimate.prop.pigment>0.05)#
+#
+lt<-LETTERS[1:8]#
+tips.a.to.h<-c("7050000010-NB0103",  "7050002710-ZANAa05","7050054670-BALB05", "7050849600-TXRSa04",  "7050045480-ACSFc04","7050041410-RCJRa01","7050822250-CYa04" , "7050048620-CVa06" ) #
+#
+res.mat<-matrix(nrow=length(lt)*2,ncol=3)#
+colnames(res.mat)<-c("species","value","time")
+res.mat
+i=1
+lt.sub<-subset(phen,CLUSTER==lt[i])#
+	lt.peak.sub<-subset(lt.sub,Julian.date>=peak.trough.season[i,2],Julian.date<=peak.trough.season[i,3])#
+	hw.trans.peak = log( (lt.peak.sub$draft.estimate.prop.pigment-0.01) / (1-((lt.peak.sub$draft.estimate.prop.pigment-0.01))))
+lt[i]
+hw.trans.peak
+cbind(lt[i],hw.trans.peak,"peak")
+phen<-subset(phen,draft.estimate.prop.pigment>0.05)#
+#
+lt<-LETTERS[1:8]#
+tips.a.to.h<-c("7050000010-NB0103",  "7050002710-ZANAa05","7050054670-BALB05", "7050849600-TXRSa04",  "7050045480-ACSFc04","7050041410-RCJRa01","7050822250-CYa04" , "7050048620-CVa06" ) #
+for(i in 1:length(lt)){#
+	lt.sub<-subset(phen,CLUSTER==lt[i])#
+	lt.peak.sub<-subset(lt.sub,Julian.date>=peak.trough.season[i,2],Julian.date<=peak.trough.season[i,3])#
+	hw.trans.peak = log( (lt.peak.sub$draft.estimate.prop.pigment-0.01) / (1-((lt.peak.sub$draft.estimate.prop.pigment-0.01))))#
+	if(i ==1){#
+		out.mat = cbind(lt[i],hw.trans.peak,"peak")#
+	} else {#
+		out.mat = rbind(out.mat, cbind(lt[i],hw.trans.peak,"peak"))#
+	}#
+	lt.trough.sub<-subset(lt.sub,Julian.date>=287 | Julian.date<=91)#
+	hw.trans.trough = log( (lt.trough.sub$draft.estimate.prop.pigment-0.01) / (1-((lt.trough.sub$draft.estimate.prop.pigment-0.01))))#
+		out.mat = rbind(out.mat, cbind(lt[i],hw.trans.trough,"trough"))#
+}
+out.mat
+write.csv(outmat,file="rphylopars_data.csv")
+write.csv(out.mat,file="rphylopars_data.csv")
+require(mvMORPH)
+?mvSIM()
+343/12
+setwd("~/Thesis_H_titia_seasonal_polyphenism_evolution")#
+phen<-read.csv("data/MASTER_titia_phenotypes_v1.0.csv")#
+peak.trough.season <- read.csv("data/peak_trough_season_dates.csv")#
+#as a result of the normalisation of non standard manual measurements, a few measurements are very small#
+#consequently, removing all values < 0.05 (the smallest hindwingspot in a standard manually measured wing)#
+#this removes 35 data points#
+#
+phen<-subset(phen,draft.estimate.prop.pigment>0.05)#
+#
+lt<-LETTERS[1:8]#
+tips.a.to.h<-c("7050000010-NB0103",  "7050002710-ZANAa05","7050054670-BALB05", "7050849600-TXRSa04",  "7050045480-ACSFc04","7050041410-RCJRa01","7050822250-CYa04" , "7050048620-CVa06" ) #
+#
+res.mat<-matrix(nrow=length(lt)*2,ncol=5)#
+colnames(res.mat)<-c("CLUSTER","treename","mean","se","time")#
+#
+counter=1
+for(i in 1:length(lt)){#
+	lt.sub<-subset(phen,CLUSTER==lt[i])#
+	lt.peak.sub<-subset(lt.sub,Julian.date>=peak.trough.season[i,2],Julian.date<=peak.trough.season[i,3])#
+	hw.trans.peak = log( (lt.peak.sub$draft.estimate.prop.pigment-0.01) / (1-((lt.peak.sub$draft.estimate.prop.pigment-0.01))))#
+	lt.peak.mean = mean(hw.trans.peak)#
+	lt.peak.se = sd(hw.trans.peak)/sqrt(length(hw.trans.peak))#
+	res.mat[counter,]<-c(lt[i],tips.a.to.h[i],lt.peak.mean,lt.peak.se,"peak")#
+	counter = counter+1#
+	lt.trough.sub<-subset(lt.sub,Julian.date>=287 | Julian.date<=91)#
+	hw.trans.trough = log( (lt.trough.sub$draft.estimate.prop.pigment-0.01) / (1-((lt.trough.sub$draft.estimate.prop.pigment-0.01))))#
+	lt.trough.mean = mean(hw.trans.trough)#
+	lt.trough.se = sd(hw.trans.trough)/sqrt(length(hw.trans.trough))#
+	res.mat[counter,]<-c(lt[i],tips.a.to.h[i],lt.trough.mean,lt.trough.se,"trough")#
+	counter = counter+1#
+}
+res.mat
+library(Rphylopars)
+Rphylopars::phylopars()
+Rphylopars:::phylopars()
+Rphylopars:::phylopars
+2.49*8
+1163-117
+150/2
+75/2
+75-37.5
+980.96+185.01+143.93+880.11
+24.84+28.45
+53.29 + 118.95
+1163-117
+(869.84+150+1473.42+1000)*.10
+783+150+2473
+3406+477+350+1000
+980.96+185.01+143.93
+118.96 + 53.29 + 100
+710.76+150+1473.52 + 1000
+3334.28+272.25+200+1309.90
+688.91 + 143.93
+3406+404
+477+3810+400+1000
+3334.28+404.73
+3739.01+1309.90+272.25+300
+1473.52 + 1000 +404
+832.84+100+2877.52+200
+19238.06*.10
+19238.06-1923.806
+17314.25*.10
+2500+1924+1731
+17314-1731
+2500+1924+1731+1000+1558
+4010.36+5687
+1473.52+1000+58
+710.76+150+1473.52 + 1000+58
+3392.28+1309.90+272.25+300
+832.84+100+2531.52
++200
+832.84+100+2531.52+200
+log(1)
+mvgls
+?mvgls()
+1722.26/2
