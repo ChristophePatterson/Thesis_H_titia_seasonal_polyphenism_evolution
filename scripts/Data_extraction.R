@@ -10,8 +10,8 @@ library(tidyverse)
 library(Rphylopars)
 
 # Raw phenotype data
-raw.pheno <- read.csv("data/MASTER_titia_phenotypes_v1.0.csv")
-peak.trough <- read.csv("data/peak_trough_v2.0_logit.csv")
+raw.pheno <- read.csv("data/MASTER_titia_phenotypes_v2.0_processed.csv")
+peak.trough <- read.csv("data/peak_trough_v3.0_logit.csv")
 peak.trough.season <- read.csv("data/peak_trough_season_dates.csv")
 
 # read in tree

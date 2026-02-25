@@ -158,7 +158,7 @@ weights.trough <- aicw(results.trough, aicc = TRUE)
 # OU estimation isn't working well with mvMORPH; try estimating parameters using Rphylopars, which can incorporate *all* observations
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 
-rphylopars_data<-read.csv("data/rphylopars_data.csv")
+rphylopars_data<-read.csv("data/rphylopars_data_v2.0.csv")
 
 peak.data.rphylopars = subset(rphylopars_data,time=="peak")[,1:2]
 rBM_peak <- phylopars(trait_data = peak.data.rphylopars,tree = tree.phylo, model = "BM")
