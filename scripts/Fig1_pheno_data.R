@@ -2,8 +2,6 @@
 source("scripts/Data_extraction.R")
 
 library(shadowtext)
-# Set plot limits
-asin.limits <- c(asin(sqrt(c(0,1))))
 
 ## Get peak and trough values
 peak.trough$time.plot[peak.trough$time=="peak"] <- rowMeans(peak.trough.season[,2:3])
@@ -14,11 +12,11 @@ library(ggrepel)
 cbPalette <- c("#F0E442","#D55E00" , "#0072B2","#E69F00" , "#56B4E9", "#009E73", "#CC79A7", "black", "#999999")
 
 # Calculate logit
-raw.pheno$draft.estimate.prop.pigment.logit <- log( (raw.pheno$draft.estimate.prop.pigment-0.01) / (1-((raw.pheno$draft.estimate.prop.pigment-0.01))))
+raw.pheno$proportion.pigmented.logit <- log( (raw.pheno$proportion.pigmented-0.01) / (1-((raw.pheno$proportion.pigmented-0.01))))
 
 # Plot1
 p.pheno <- ggplot(raw.pheno[!is.na(raw.pheno$CLUSTER),]) +
-  geom_point(aes(Julian.date, draft.estimate.prop.pigment.logit, fill = CLUSTER, alpha = cluster_season), size = 3, shape = 21, show.legend = F) +
+  geom_point(aes(Julian.date, proportion.pigmented.logit, fill = CLUSTER, alpha = cluster_season), size = 3, shape = 21, show.legend = F) +
   geom_point(data = peak.trough[peak.trough$CLUSTER!="all data"&!is.na(peak.trough$CLUSTER),], 
              aes(x = time.plot, y = mean, fill = CLUSTER), col = "black", shape = 23, size = 5, stroke = 1.5) +
   geom_label_repel(data = peak.trough[peak.trough$CLUSTER!="all data"&!is.na(peak.trough$CLUSTER),], 
@@ -38,6 +36,7 @@ p.pheno <- ggplot(raw.pheno[!is.na(raw.pheno$CLUSTER),]) +
 
 p.pheno
 
+library(sf)
 
 # Geographic distibution
 world_map <- read_sf("data/world_data/ne_10m_admin_0_countries/ne_10m_admin_0_countries.shp")
@@ -71,7 +70,7 @@ map.plot <- ggplot(raw.pheno) +
   geom_point(aes(longitude, latitude, col = CLUSTER), size = 2, show.legend = F) +
   #geom_polygon(data = hull[hull$CLUSTER!="NA",], aes(longitude, latitude, colour = CLUSTER,), size = 1,  fill = NA, show.legend = F) +
   #geom_text(data = pheno.location.summary, aes(lon, lat, label = CLUSTER), size = 11, col = "black") +
-  geom_shadowtext(data = pheno.location.summary, aes(lon, lat, label = CLUSTER), size = 8, bg.colour='black') +
+  #geom_shadowtext(data = pheno.location.summary, aes(lon, lat, label = CLUSTER), size = 8, bg.colour='black') +
   coord_sf(xlim = range(raw.pheno$longitude)+c(-5,+5), ylim =range(raw.pheno$latitude)+c(-2,+2), default_crs = st_crs(4326)) +
   scale_color_manual(values = cbPalette) +
   labs(x = "Longitude", y = "Latitude", col = "Tree tip") +
@@ -83,9 +82,16 @@ map.plot <- ggplot(raw.pheno) +
   theme(text = element_text(size = 18))
 
 
+map.plot
+
 ## Tree plot
+##not the most elegant solution for reordering tips, but produces an accurate tree
+
+tree.phylo$tip.label<-c("A","B","E","F","H","G","C","D")
+tree.plot <- ggtree(tree.phylo, size = 1.2) 
+
 tree.map <- (tree.plot + geom_tiplab(aes(x = x + 0.1), size = 6) + geom_tippoint(aes(fill = label), col = "black", shape = 23, size = 5, stroke = 1.5, show.legend = F, ) + scale_fill_manual(values = cbPalette, breaks = plot.tip.order) 
-             + scale_x_continuous(expand = c(0.1, 0.1))) +  theme(text = element_text(size = 18))
+             +geom_treescale(width=0.5,linesize=1.2)+ scale_x_continuous(expand = c(0.1, 0.1))) +  theme(text = element_text(size = 18))
 
 figure1 <- p.pheno / (tree.map + map.plot) / guide_area() + plot_layout(heights = c(2,1.75, 0.2), guides = "collect") +
   plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")")

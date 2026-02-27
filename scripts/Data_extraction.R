@@ -24,7 +24,7 @@ peak.trough.season <- read.csv("data/peak_trough_season_dates.csv")
 tree.phylo <-ape::read.tree(file="data/titia_tree_trimmed.tree")
 
 # Rename tips based on cluster names
-tree.phylo$tip.label <- peak.trough$CLUSTER[match(tree.phylo$tip.label, peak.trough$treename)]
+tree.phylo$tip.label <- as.character(peak.trough$CLUSTER[match(tree.phylo$tip.label, peak.trough$treename)])
 
 # Convert to ggtree
 tree.plot <- ggtree(tree.phylo, size = 1.2) + geom_tiplab(size = 6)
