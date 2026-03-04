@@ -50,7 +50,9 @@ ruby ${base_dir}/Thesis_H_titia_seasonal_polyphenism_evolution/scripts/snapp_pre
 
 ## ALERT I HAVE CHANGED THE LOCATION OF BEAST FROM HOME TO NOBACKUP SINCE RUNNING THIS SCRIPT AS SUCH PREPARE FOR ERRORS
 
-~/apps/beast/bin/beast -threads $SLURM_CPUS_PER_TASK -overwrite $output_dir/$phy_file.xml > $phy_file.screen.log
+~/apps/beast/bin/beast -threads $SLURM_CPUS_PER_TASK -overwrite $output_dir/$phy_file.xml > $output_dir/$phy_file.screen.log
+
+## Rscript /gpfs01/home/mbzcp2/code/Github/Thesis_H_titia_seasonal_polyphenism_evolution/scripts/SNAPP/SNAPP_tree_QC.R $output_dir/$phy_file
 
 ~/apps/beast/bin/treeannotator -burnin 10 $phy_file.trees $phy_file.trees.Anon
 
