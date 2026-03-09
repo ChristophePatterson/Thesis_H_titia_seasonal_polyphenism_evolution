@@ -6,7 +6,8 @@ library(patchwork)
 # Read in args
 ## Get command line argument
 args <- commandArgs(trailingOnly = TRUE)
-run.name <- args[1]
+run.path <- args[1]
+run.name <- basename(run.path)
 
 plot.dir <- "plots/SNAPP"
 dir.create(plot.dir)
@@ -15,13 +16,14 @@ dir.create(plot.dir)
 print(run.name)
 
 #  Get trace file
-trace.df <- read_table(paste0(run.name, ".log"))
+trace.df <- read_table(paste0(run.path, ".log"))
 trace.df
 
 # Get trees
-# trees <- read_lines(paste0(run.name, ".trees"))
+## For when the run hasn't yet completed adds on end of nex file
+# trees <- read_lines(paste0(run.path, ".trees"))
 # writeLines(c(trees, "End;"), paste0(run.name, ".trees.tmp"))
-trees <- ape::read.nexus(paste0(run.name, ".trees.tmp"))
+trees <- ape::read.nexus(paste0(run.path, ".trees"))
 
 # Set burn in
 burn.in <- 0.2

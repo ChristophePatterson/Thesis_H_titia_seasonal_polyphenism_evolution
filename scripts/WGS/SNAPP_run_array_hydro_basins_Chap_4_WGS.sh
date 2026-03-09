@@ -32,7 +32,7 @@ module load ruby-uoneasy/3.4.2-GCCcore-13.3.0
 base_dir="/gpfs01/home/$USER/code/Github/Thesis_H_titia_seasonal_polyphenism_evolution"
 cd $base_dir
 
-hydro="5"
+hydro="4"
 # Output directory
 output_dir=(${base_dir}/data/SNAPP/Hydro_${hydro}_WGS_max_cov)
 input_dir=(${base_dir}/data/SNPs/SNAPP)
@@ -53,6 +53,7 @@ ruby ${base_dir}/scripts/snapp_prep.rb -p $input_dir/$phy_file.phy -t $input_dir
 
 ## Rscript /gpfs01/home/mbzcp2/code/Github/Thesis_H_titia_seasonal_polyphenism_evolution/scripts/SNAPP/SNAPP_tree_QC.R $output_dir/$phy_file
 
-~/apps/beast/bin/treeannotator -burnin 10 $phy_file.trees $phy_file.trees.Anon
+~/apps/beast/bin/treeannotator -burnin 20 $output_dir/$phy_file.trees $output_dir/$phy_file._BI20.Anon.nex
+~/apps/beast/bin/treeannotator -burnin 20 -height median $output_dir/$phy_file.trees $output_dir/$phy_file._BI20_HGTmed.Anon.nex
 
 cd ~
