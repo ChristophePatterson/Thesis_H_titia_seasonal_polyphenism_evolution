@@ -8,6 +8,9 @@ library(patchwork)
 args <- commandArgs(trailingOnly = TRUE)
 run.name <- args[1]
 
+plot.dir <- "plots/SNAPP"
+dir.create(plot.dir)
+
 # Print name
 print(run.name)
 
@@ -16,8 +19,8 @@ trace.df <- read_table(paste0(run.name, ".log"))
 trace.df
 
 # Get trees
-trees <- read_lines(paste0(run.name, ".trees"))
-writeLines(c(trees, "End;"), paste0(run.name, ".trees.tmp"))
+# trees <- read_lines(paste0(run.name, ".trees"))
+# writeLines(c(trees, "End;"), paste0(run.name, ".trees.tmp"))
 trees <- ape::read.nexus(paste0(run.name, ".trees.tmp"))
 
 # Set burn in
@@ -60,16 +63,17 @@ p.tree <- ggdensitree(time.trees[min.tree:max.tree], colour='black', alpha = .3)
 
 # Create trace plot without burn-in
 p.trace.tmp <- ggplot(trace.df[min.tree:max.tree,]) +
-    geom_line(aes(Sample, posterior))
+    geom_line(aes(Sample, treeHeightLogger))
 
 p.trace.inset <- ggplot(trace.df) +
-    geom_line(aes(Sample, posterior))
+    geom_line(aes(Sample, treeHeightLogger))
 
 
 # Add in inset for all trees
-p.trace <- p.trace.tmp + inset_element(p.trace.inset, left = 0.6, right = 0.9, top = 0.6, bottom = 0.1)
+p.trace <- p.trace.tmp # + inset_element(p.trace.inset, left = 0.6, right = 0.9, top = 0.6, bottom = 0.1)
 
 ## p.trace <- ggplot(trace.df[min.tree:max.tree,]) +
 ##     geom_line(aes(Sample, treeHeightLogger))
 
-ggsave("test.png", p.tree / p.trace, width = 12, height = 8)
+ggsave(paste0(plot.dir, "/", run.name,"_SNAPP.png"), p.tree / p.trace, width = 12, height = 8)
+ggsave(paste0(plot.dir, "/", run.name,"_SNAPP.pdf"), p.tree / p.trace, width = 12, height = 8)

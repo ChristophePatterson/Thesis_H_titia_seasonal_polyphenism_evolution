@@ -29,23 +29,22 @@ module load ruby-uoneasy/3.4.2-GCCcore-13.3.0
 # May need to run the code
 # /home/tmjj24/apps/beast/bin/packagemanager -add SNAPP
 
-base_dir="/gpfs01/home/$USER/code/Github/"
+base_dir="/gpfs01/home/$USER/code/Github/Thesis_H_titia_seasonal_polyphenism_evolution"
+cd $base_dir
 
-hydro="4"
+hydro="5"
 # Output directory
-output_dir=(${base_dir}/Thesis_H_titia_seasonal_polyphenism_evolution/data/SNAPP/Hydro_${hydro}_WGS_max_cov)
-input_dir=(${base_dir}/Thesis_H_titia_seasonal_polyphenism_evolution/data/SNPs/SNAPP)
+output_dir=(${base_dir}/data/SNAPP/Hydro_${hydro}_WGS_max_cov)
+input_dir=(${base_dir}/data/SNPs/SNAPP)
 mkdir -p $output_dir
 
 # Input file prefix
 phy_file=(titia.mysnps-SNAPP-hydro_${hydro}_max_cov)
 
-cd $output_dir
-
 # Run ruby script for creating xml SNAPP config file
 # Uses https://github.com/mmatschiner/tutorials/blob/master/divergence_time_estimation_with_snp_data/README.md
 
-ruby ${base_dir}/Thesis_H_titia_seasonal_polyphenism_evolution/scripts/snapp_prep.rb -p $input_dir/$phy_file.phy -t $input_dir/$phy_file.txt \
+ruby ${base_dir}/scripts/snapp_prep.rb -p $input_dir/$phy_file.phy -t $input_dir/$phy_file.txt \
 -c $input_dir/$phy_file.con.txt -l 1000000 -x $output_dir/$phy_file.xml -o $output_dir/$phy_file
 
 ## ALERT I HAVE CHANGED THE LOCATION OF BEAST FROM HOME TO NOBACKUP SINCE RUNNING THIS SCRIPT AS SUCH PREPARE FOR ERRORS

@@ -3,7 +3,6 @@
 #install.packages("elevatr")
 library(sf)
 library(ggplot2)
-library(elevatr)
 library(vcfR)
 library(adegenet)
 library(ape)
@@ -115,10 +114,11 @@ for(run in 1:run.num){
 rand.basin_5
 # max.coverage.basin_5 <- do.call("c", max.coverage.basin_5)
 
-ggplot(sites[sites$Unique.ID%in%max.coverage.basin_5,]) +
+p <- ggplot(sites[sites$Unique.ID%in%max.coverage.basin_5,]) +
   geom_sf(data = hydrobasins_5, aes(fill = as.factor(HYBAS_ID)), show.legend = F) +
   geom_point(aes(Long, Lat, size = covarage))
 
+ggsave("test.png", p, width = 10, height = 10)
 ####################
 ## HYDROBASINS 4 ###
 ####################
@@ -185,7 +185,7 @@ colnames(gt) <- sites.SNPS.short$Unique.ID
 ape::write.dna(t(gt), file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNAPP-hydro_4_max_cov.phy"),
                format ="interleaved", nbcol = -1, colsep = "")
 ## (2) Species table
-species.df <- data.frame(species = sites.SNPS.short$basin_4, sample = sites.SNPS.short$Unique.ID)
+species.df <- data.frame(species = paste0(sites.SNPS.short$basin_4,"-", sites.SNPS.short$Unique.ID), sample = sites.SNPS.short$Unique.ID)
 write.table(species.df, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNAPP-hydro_4_max_cov.txt"),
             row.names = F,quote = F, sep = "\t")
 # (3) Theta priors from Stranding et al 2022
@@ -194,7 +194,7 @@ write.table(species.df, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNA
 # Titia divergence from G-Phocs run without migration
 hist(rnorm(1000, 3.4, 0.1))
 contrant.df <- data.frame(x = "normal(0,3.4,0.1)", y = "crown", 
-                          z = paste0(unique(sites.SNPS.short$basin_4), sep = ",",collapse = ""))
+                          z = paste0(sites.SNPS.short$basin_4,"-",sites.SNPS.short$Unique.ID, sep = ",",collapse = ""))
 # Americana/calverti
 #remove trailing comma
 contrant.df$z <- substr(contrant.df$z, start = 1 , stop = nchar(contrant.df$z)-1)
