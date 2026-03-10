@@ -15,11 +15,17 @@ peak.trough <- read.csv("data/peak_trough_v3.0_logit.csv")
 peak.trough.season <- read.csv("data/peak_trough_season_dates.csv")
 
 # read in tree
-#tree <- treeio::read.mega(file = "data/SNAPP/Hetaerina_titia_ddRAD_titia_dg-SNAPP-hydro_5_max_cov.trees_old.Anon")
+#tree <- treeio::read.mega(file = "data/SNAPP/Hydro_5_WGS_max_cov/titia.mysnps-SNAPP-hydro_5_max_cov.trees.Anon")
 # Get in ape phylo format
 #tree.phylo <- tree@phylo
 # Remove tips that arn't retained in cluster
+#tree.full<-tree.phylo
+#node_data <- tree@data
+#posterior <- node_data$posterior[!is.na(node_data$posterior)]
+#tree.full$node.label<-posterior
+#write.tree(tree.full,file="data/titia_tree_MCC.tree")
 #tree.phylo <- drop.tip(tree.phylo, tip = which(!tree.phylo$tip.label%in%peak.trough$treename))
+#write.tree(tree.phylo,file="data/titia_tree_trimmed.tree")
 
 tree.phylo <-ape::read.tree(file="data/titia_tree_trimmed.tree")
 
@@ -57,10 +63,10 @@ raw.pheno$Date.R <- as.Date(raw.pheno$DATE, format = "%d/%m/%Y")
 range(raw.pheno[!is.na(raw.pheno$Standard_image),]$Date.R)
 raw.pheno$Standard_image
 
-table(raw.pheno$best.estimate.source)
-sum(table(raw.pheno$best.estimate.source))
+table(raw.pheno$data.source)
+sum(table(raw.pheno$data.source))
 raw.pheno %>%
-  group_by(by = best.estimate.source) %>%
+  group_by(by = data.source) %>%
   summarise(min.date = min(Date.R), max.date = max(Date.R), num.records = length(Date.R))
 
 ## What were the total number of phenotype measurements from each source
@@ -82,7 +88,7 @@ combn(letters[1:4], 2)
 raw.pheno$CLUSTER
 
 tip.measurement.type <- raw.pheno %>%
-  group_by(CLUSTER, best.estimate.source) %>%
+  group_by(CLUSTER, data.source) %>%
   summarise(num.records = length(Date.R))
 
 tip.labs <- stringr::str_split_i(tree@phylo$tip.label, "-", 2)
