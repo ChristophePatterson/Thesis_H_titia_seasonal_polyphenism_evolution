@@ -32,7 +32,7 @@ module load ruby-uoneasy/3.4.2-GCCcore-13.3.0
 base_dir="/gpfs01/home/$USER/code/Github/Thesis_H_titia_seasonal_polyphenism_evolution"
 cd $base_dir
 
-hydro="4"
+hydro="5"
 # Output directory
 output_dir=(${base_dir}/data/SNAPP/Hydro_${hydro}_WGS_max_cov)
 input_dir=(${base_dir}/data/SNPs/SNAPP)
