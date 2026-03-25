@@ -98,3 +98,34 @@ figure1 <- p.pheno / (tree.map + map.plot) / guide_area() + plot_layout(heights 
 
 ggsave("plots/Figure1.png", figure1, width = 7.24*1.8, height = 7.24*2)
 
+
+##full mcc tree plot
+
+tree.mcc<-read.tree(file="data/titia_tree_MCC.tree")
+tree.mcc$tip.label<-sub(".*-", "", tree.mcc$tip.label)
+tree.mcc$tip.label[which(tree.mcc$tip.label=="TM01c2")]<-"TM01_titiaB"
+
+col.table<-data.frame(tip.label=tree.mcc$tip.label)
+col.table$CLUSTER<-c("A",rep("B",3),rep("F",6),rep("E",3),"EAFB",rep("H",10),rep("G",2),rep("D",5),rep("C",2))  
+col.table$col<-c(cbPalette[8],rep(cbPalette[7],3),rep(cbPalette[2],6),rep(cbPalette[1],3),cbPalette[9],rep(cbPalette[3],10),rep(cbPalette[4],2),rep(cbPalette[6],5),rep(cbPalette[5],2))  
+  
+tree.mcc.plot <- ggtree(tree.mcc, size = 0.8) %<+% col.table +
+  geom_tiplab(aes(x = x + 0.1), size = 6, colour = "black") +
+  geom_tippoint(aes(fill = CLUSTER),
+                shape = 23,
+                colour = "black",
+                size = 5,
+                stroke = 1.5) +
+  geom_nodepoint(aes(colour = as.numeric(label)),
+                 size = 3) +
+  scale_fill_manual(
+    name = "Cluster",
+    values = setNames(col.table$col, col.table$CLUSTER)
+  ) +
+  scale_colour_gradient(low = "grey90", high = "grey10",name = "Node support") +
+  geom_treescale(width = 0.5, linesize = 1.2) +
+  scale_x_continuous(expand = c(0.1, 0.1)) +
+  theme(text = element_text(size = 18))
+
+ggsave("plots/FigureS2.pdf", tree.mcc.plot, width = 7.24*2, height = 7.24*2)
+
