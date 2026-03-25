@@ -192,8 +192,8 @@ write.table(species.df, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNA
 # All Hetaerina samples
 # normal(offset,mean,sigma)
 # Titia divergence from G-Phocs run without migration
-hist(rnorm(1000, 3.4, 0.1))
-contrant.df <- data.frame(x = "normal(0,3.4,0.1)", y = "crown", 
+hist(rnorm(1000, 3.73, 0.8))
+contrant.df <- data.frame(x = "normal(0,3.73,0.8)", y = "crown", 
                           z = paste0(sites.SNPS.short$basin_4,"-",sites.SNPS.short$Unique.ID, sep = ",",collapse = ""))
 # Americana/calverti
 #remove trailing comma
@@ -288,8 +288,8 @@ write.table(species.df, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNA
 # All Hetaerina samples
 # normal(offset,mean,sigma)
 # Titia divergence from SNAPP run without migration
-hist(rnorm(1000, 3.4, 0.1), breaks = 30)
-contrant.df <- data.frame(x = "normal(0,3.5,0.1)", y = "crown", 
+hist(rnorm(1000, 3.73, 0.8), breaks = 30)
+contrant.df <- data.frame(x = "normal(0,3.73,0.8)", y = "crown", 
                           z = paste0(sites.SNPS.short$basin_5,"-",sites.SNPS.short$Unique.ID, sep = ",",collapse = ""))
 # Americana/calverti
 #remove trailing comma
@@ -384,7 +384,7 @@ for(run in 1:run.num){
   # normal(offset,mean,sigma)
   # Titia divergence from SNAPP run without migration
   ## hist(rnorm(10000, 3.4, 0.1), breaks = 30)
-  contrant.df <- data.frame(x = "normal(0,3.5,0.5)", y = "crown", 
+  contrant.df <- data.frame(x = "normal(0,3.73,0.8)", y = "crown", 
                             z = paste0(sites.SNPS.short$basin_5,"-",sites.SNPS.short$samples, sep = ",",collapse = ""))
   # Americana/calverti
   #remove trailing comma
