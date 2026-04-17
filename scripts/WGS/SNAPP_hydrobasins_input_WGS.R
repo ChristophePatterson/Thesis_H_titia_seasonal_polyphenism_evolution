@@ -57,7 +57,7 @@ dim(sites_sf)
 sf_use_s2(FALSE)
 st_crs(sites_sf) <- st_crs(hydrobasins_4)
 
-plot(sites_sf[1])
+## plot(sites_sf[1])
 
 # Extract basin info for each sample point
 samples_basin_3 <- st_intersection(hydrobasins_3, sites_sf)
@@ -82,6 +82,7 @@ vcf.bi@fix[,1] <- gsub("\\.", "_", vcf.bi@fix[,1])
 my_genind_ti <- vcfR2genind(vcf.bi, sep = "/", return.alleles = TRUE)
 
 # Get proporation of missing SNPS for each sample
+print("Starting Sample missing calcs: takes a while")
 sample.miss <- propTyped(my_genind_ti, by = "ind")
 hist(sample.miss)
 
@@ -193,7 +194,7 @@ write.table(species.df, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNA
 # normal(offset,mean,sigma)
 # Titia divergence from G-Phocs run without migration
 hist(rnorm(1000, 3.73, 0.8))
-contrant.df <- data.frame(x = "normal(0,3.73,0.8)", y = "crown", 
+contrant.df <- data.frame(x = "normal(0,3.73,0.1)", y = "crown", 
                           z = paste0(sites.SNPS.short$basin_4,"-",sites.SNPS.short$Unique.ID, sep = ",",collapse = ""))
 # Americana/calverti
 #remove trailing comma
@@ -203,10 +204,124 @@ write.table(contrant.df, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SN
             row.names = F, col.names = F, quote = F, sep = "\t")
 
 
+p <- ggplot(sites.SNPS.short) +
+geom_point(aes(Long, Lat, col = substr(basin_3, 1, 6)))
+
+ggsave("test.pdf", p)
+## Generate starting tree
+
+# -------------------------------
+# Samples from each region
+# -------------------------------
+NAtl_basins <- c(703003)
+SAtl_basins <- c(703004)
+Pacific_basins <- c(703000)
+
+sites.SNPS.short$cluster_previsional <- NA
+sites.SNPS.short$cluster_previsional[substr(sites.SNPS.short$basin_3,1,6)%in%Pacific_basins] <- "Pac"
+sites.SNPS.short$cluster_previsional[(!substr(sites.SNPS.short$basin_3,1,6)%in%Pacific_basins)&sites.SNPS.short$Lat>20] <- "NAtl"
+sites.SNPS.short$cluster_previsional[(!substr(sites.SNPS.short$basin_3,1,6)%in%Pacific_basins)&sites.SNPS.short$Lat<20] <- "SAtl"
+
+paste0(sites.SNPS.short$basin_4,"-",sites.SNPS.short$Unique.ID)[sites.SNPS.short$cluster_previsional=="Pac"]
+
+p <- ggplot(sites.SNPS.short) +
+geom_point(aes(Long, Lat, col = cluster_previsional))
+
+ggsave("test.png", p)
+
+pacific <- paste0(sites.SNPS.short$basin_4,"-",sites.SNPS.short$Unique.ID)[sites.SNPS.short$cluster_previsional=="Pac"]
+north_atlantic <- paste0(sites.SNPS.short$basin_4,"-",sites.SNPS.short$Unique.ID)[sites.SNPS.short$cluster_previsional=="NAtl"]
+south_atlantic <- paste0(sites.SNPS.short$basin_4,"-",sites.SNPS.short$Unique.ID)[sites.SNPS.short$cluster_previsional=="SAtl"]
+
+# Set tree heights
+within_group_height <- 0.2
+between_atlantics   <- 1.11   # divergence between North & South Atlantic
+between_pacific     <- 3.74   # divergence of Pacific from Atlantic clade
+
+# -------------------------------
+# RANDOM GROUP TREE FUNCTION
+# -------------------------------
+
+random_group_tree <- function(taxa, max_height) {
+  tr <- rtree(length(taxa), tip.label = taxa)
+  tr <- compute.brlen(tr)
+  
+  h <- max(node.depth.edgelength(tr))
+  tr$edge.length <- tr$edge.length * (max_height / h)
+  
+  tr
+}
+
+# -------------------------------
+# GENERATE RANDOM TREES
+# -------------------------------
+
+tree_pacific <- random_group_tree(pacific, within_group_height)
+tree_na      <- random_group_tree(north_atlantic, within_group_height)
+tree_sa      <- random_group_tree(south_atlantic, within_group_height)
+
+# -------------------------------
+# FIXED HIGHER-LEVEL TOPOLOGY
+# Relationship: ((North Atlantic, South Atlantic), Pacific)
+# -------------------------------
+
+skeleton <- read.tree(text = "((North_Atlantic,South_Atlantic),Pacific);")
+
+skeleton$edge.length <- c(
+  between_pacific-(between_atlantics),   # North Atlantic, South Atlantic)
+  between_atlantics-within_group_height,   # North Atlantic
+  between_atlantics-within_group_height,   # South Atlantic
+  between_pacific-within_group_height   # Pacific
+)
+
+plot(skeleton)
+node.height(skeleton)
+node.depth.edgelength(skeleton)
+
+skeleton$edge.length
+axisPhylo()
+
+# -------------------------------
+# GRAFT GROUP TREES
+# -------------------------------
+
+full_tree <- bind.tree(
+  skeleton, tree_na,
+  where = which(skeleton$tip.label == "North_Atlantic")
+)
+
+full_tree <- bind.tree(
+  full_tree, tree_sa,
+  where = which(full_tree$tip.label == "South_Atlantic")
+)
+
+full_tree <- bind.tree(
+  full_tree, tree_pacific,
+  where = which(full_tree$tip.label == "Pacific")
+)
+
+# Remove placeholder tips
+full_tree <- drop.tip(
+  full_tree,
+  c("North_Atlantic", "South_Atlantic", "Pacific")
+)
+
+# -------------------------------
+# CHECK & PLOT
+# -------------------------------
+
+png("test.png", width = 480, height = 480, units = "px")
+plot(full_tree, cex = 0.8)
+axisPhylo()
+dev.off()
+
+# Write out nexus
+write.nexus(full_tree, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNAPP-hydro_4_max_cov_start_tree.nex"))
+
+
 ####################
 ## HYDROBASINS 5 ###
 ####################
-
 
 #Subset geneid to the top coverage samples
 max.coverage.basin_5 <- mapply(unique(sites$basin_5), FUN = function(x) sites$Unique.ID[sites$basin_5==x][which.max(sites$covarage[sites$basin_5==x])])
@@ -262,10 +377,12 @@ colnames(gt) <- paste(sites.SNPS.short$basin_5, sites.SNPS.short$Unique.ID, sep 
 colnames(gt)
 dim(gt)
 
-ggplot(sites_sf[sites_sf$Unique.ID%in%max.coverage.basin_5,]) +
+p <- ggplot(sites_sf[sites_sf$Unique.ID%in%max.coverage.basin_5,]) +
   geom_sf(data = hydrobasins_5, aes(fill = as.factor(HYBAS_ID)), show.legend = F) +
   geom_sf(size = 3)
 
+
+ggsave("test.png", p, width = 8, height = 8)
 # Create in put
 
 N <- 1
@@ -288,7 +405,7 @@ write.table(species.df, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNA
 # All Hetaerina samples
 # normal(offset,mean,sigma)
 # Titia divergence from SNAPP run without migration
-hist(rnorm(1000, 3.73, 0.8), breaks = 30)
+hist(rnorm(1000, 3.73, 0.1), breaks = 30)
 contrant.df <- data.frame(x = "normal(0,3.73,0.8)", y = "crown", 
                           z = paste0(sites.SNPS.short$basin_5,"-",sites.SNPS.short$Unique.ID, sep = ",",collapse = ""))
 # Americana/calverti
@@ -298,100 +415,214 @@ contrant.df$z <- substr(contrant.df$z, start = 1 , stop = nchar(contrant.df$z)-1
 write.table(contrant.df, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNAPP-hydro_5_max_cov.con.txt"),
             row.names = F, col.names = F, quote = F, sep = "\t")
 
-####################
-## HYDROBASINS 5 - 1 random sample ###
-####################
-run <- 1
-for(run in 1:run.num){
-  #Subset geneid to the top coverage samples
-  run.i.coverage.basin_5 <- rand.basin_5[[run]]
+p <- ggplot(sites.SNPS.short) +
+geom_point(aes(Long, Lat, col = substr(basin_3, 1, 6)))
+
+ggsave("test.pdf", p)
+## Generate starting tree
+
+# -------------------------------
+# Samples from each region
+# -------------------------------
+NAtl_basins <- c(703003)
+SAtl_basins <- c(703004)
+Pacific_basins <- c(703000)
+
+sites.SNPS.short$cluster_previsional <- NA
+sites.SNPS.short$cluster_previsional[substr(sites.SNPS.short$basin_3,1,6)%in%Pacific_basins] <- "Pac"
+sites.SNPS.short$cluster_previsional[(!substr(sites.SNPS.short$basin_3,1,6)%in%Pacific_basins)&sites.SNPS.short$Lat>20] <- "NAtl"
+sites.SNPS.short$cluster_previsional[(!substr(sites.SNPS.short$basin_3,1,6)%in%Pacific_basins)&sites.SNPS.short$Lat<20] <- "SAtl"
+
+paste0(sites.SNPS.short$basin_4,"-",sites.SNPS.short$Unique.ID)[sites.SNPS.short$cluster_previsional=="Pac"]
+
+p <- ggplot(sites.SNPS.short) +
+geom_point(aes(Long, Lat, col = cluster_previsional))
+
+ggsave("test.png", p)
+
+pacific <- paste0(sites.SNPS.short$basin_5,"-",sites.SNPS.short$Unique.ID)[sites.SNPS.short$cluster_previsional=="Pac"]
+north_atlantic <- paste0(sites.SNPS.short$basin_5,"-",sites.SNPS.short$Unique.ID)[sites.SNPS.short$cluster_previsional=="NAtl"]
+south_atlantic <- paste0(sites.SNPS.short$basin_5,"-",sites.SNPS.short$Unique.ID)[sites.SNPS.short$cluster_previsional=="SAtl"]
+
+# Set tree heights
+within_group_height <- 0.2
+between_atlantics   <- 1.11   # divergence between North & South Atlantic
+between_pacific     <- 3.74   # divergence of Pacific from Atlantic clade
+
+# -------------------------------
+# RANDOM GROUP TREE FUNCTION
+# -------------------------------
+
+random_group_tree <- function(taxa, max_height) {
+  tr <- rtree(length(taxa), tip.label = taxa)
+  tr <- compute.brlen(tr)
   
-  my_genind_ti_SNPs.short <- my_genind_ti[run.i.coverage.basin_5,]
-  sites.SNPS.short <- sites[sites$samples%in%run.i.coverage.basin_5,]
+  h <- max(node.depth.edgelength(tr))
+  tr$edge.length <- tr$edge.length * (max_height / h)
   
-  #Remove non-varient sites
-  SNP.allele.num <- vector()
-  for(i in 1:dim(my_genind_ti_SNPs.short@tab)[2]){
-    temp.gt <- unique(my_genind_ti_SNPs.short@tab[,i])
-    temp.gt <- temp.gt[!is.na(temp.gt)]
-    SNP.allele.num[i] <- length(temp.gt)
-  }
-  table(SNP.allele.num)
-  
-  my_genind_ti_SNPs.short <- my_genind_ti_SNPs.short[,SNP.allele.num!=1]
-  
-  # Get smaples from vcf file
-  vcf.bi.short <- vcf.bi[,c("FORMAT",sites.SNPS.short$samples)]
-  poly.snps <- substr(colnames(my_genind_ti_SNPs.short@tab), start = 1, stop =  nchar(colnames(my_genind_ti_SNPs.short@tab))-2)
-  all_snps <- paste(vcf.bi.short@fix[,1],vcf.bi.short@fix[,2], sep = "_")
-  
-  vcf.bi.short <- vcf.bi.short[all_snps%in%poly.snps,]
-  vcf.bi.short <- vcf.bi.short[is.biallelic(vcf.bi.short),]
-  
-  gt <- extract.gt(vcf.bi.short, return.alleles = TRUE, convertNA = TRUE)
-  
-  gt[gt=="A/A"] <- "A"
-  gt[gt=="T/T"] <- "T"
-  gt[gt=="G/G"] <- "G"
-  gt[gt=="C/C"] <- "C"
-  gt[gt=="A/G"] <- "R"
-  gt[gt=="G/A"] <- "R"
-  gt[gt=="C/T"] <- "Y"
-  gt[gt=="T/C"] <- "Y"
-  gt[gt=="A/C"] <- "M"
-  gt[gt=="C/A"] <- "M"
-  gt[gt=="G/T"] <- "K"
-  gt[gt=="T/G"] <- "K"
-  gt[gt=="C/G"] <- "S"
-  gt[gt=="G/C"] <- "S"
-  gt[gt=="A/T"] <- "W"
-  gt[gt=="T/A"] <- "W"
-  gt[gt=="."] <- "?"
-  
-  # Rename file with population name
-  colnames(gt)==sites.SNPS.short$samples
-  colnames(gt) <- paste(sites.SNPS.short$basin_5, sites.SNPS.short$samples, sep = "_")
-  
-  
-  # Stats on how many samples and SNPs there are
-  colnames(gt)
-  dim(gt)
-  
-  ggplot(sites_sf[sites_sf$samples%in%run.i.coverage.basin_5,]) +
-    geom_sf(data = hydrobasins_5, aes(fill = as.factor(HYBAS_ID)), show.legend = F) +
-    geom_sf(size = 3)
-  
-  # Create in put
-  
-  
-  SNAPP_run_name <- paste0("-SNAPP-hydro_5_run", run)
-  #Write nexus
-  write.nexus.data(t(gt), file = paste0(dir.path, "SNAPP/", SNP.library.name, SNAPP_run_name,".nex"), 
-                   format = "DNA", missing = "?", interleaved = F)
-  
-  ## Set up files following https://github.com/mmatschiner/tutorials/blob/master/divergence_time_estimation_with_snp_data/README.md
-  ## (1) Phylip file
-  colnames(gt) <- sites.SNPS.short$samples
-  
-  ape::write.dna(t(gt), file = paste0(dir.path, "SNAPP/", SNP.library.name,SNAPP_run_name,".phy"),
-                 format ="interleaved", nbcol = -1, colsep = "")
-  ## (2) Species table
-  species.df <- data.frame(species = paste0(sites.SNPS.short$basin_5,"-",sites.SNPS.short$samples), sample = sites.SNPS.short$samples)
-  write.table(species.df, file = paste0(dir.path, "SNAPP/", SNP.library.name,SNAPP_run_name,".txt"),
-              row.names = F,quote = F, sep = "\t")
-  # (3) Theta priors from Stranding et al 2022
-  # All Hetaerina samples
-  # normal(offset,mean,sigma)
-  # Titia divergence from SNAPP run without migration
-  ## hist(rnorm(10000, 3.4, 0.1), breaks = 30)
-  contrant.df <- data.frame(x = "normal(0,3.73,0.8)", y = "crown", 
-                            z = paste0(sites.SNPS.short$basin_5,"-",sites.SNPS.short$samples, sep = ",",collapse = ""))
-  # Americana/calverti
-  #remove trailing comma
-  contrant.df$z <- substr(contrant.df$z, start = 1 , stop = nchar(contrant.df$z)-1)
-  
-  write.table(contrant.df, file = paste0(dir.path, "SNAPP/", SNP.library.name,SNAPP_run_name,".con.txt"),
-              row.names = F, col.names = F, quote = F, sep = "\t")
-  
+  tr
 }
 
+# -------------------------------
+# GENERATE RANDOM TREES
+# -------------------------------
+
+tree_pacific <- random_group_tree(pacific, within_group_height)
+tree_na      <- random_group_tree(north_atlantic, within_group_height)
+tree_sa      <- random_group_tree(south_atlantic, within_group_height)
+
+# -------------------------------
+# FIXED HIGHER-LEVEL TOPOLOGY
+# Relationship: ((North Atlantic, South Atlantic), Pacific)
+# -------------------------------
+
+skeleton <- read.tree(text = "((North_Atlantic,South_Atlantic),Pacific);")
+
+skeleton$edge.length <- c(
+  between_pacific-(between_atlantics),   # North Atlantic, South Atlantic)
+  between_atlantics-within_group_height,   # North Atlantic
+  between_atlantics-within_group_height,   # South Atlantic
+  between_pacific-within_group_height   # Pacific
+)
+
+plot(skeleton)
+node.height(skeleton)
+node.depth.edgelength(skeleton)
+
+skeleton$edge.length
+axisPhylo()
+
+# -------------------------------
+# GRAFT GROUP TREES
+# -------------------------------
+
+full_tree <- bind.tree(
+  skeleton, tree_na,
+  where = which(skeleton$tip.label == "North_Atlantic")
+)
+
+full_tree <- bind.tree(
+  full_tree, tree_sa,
+  where = which(full_tree$tip.label == "South_Atlantic")
+)
+
+full_tree <- bind.tree(
+  full_tree, tree_pacific,
+  where = which(full_tree$tip.label == "Pacific")
+)
+
+# Remove placeholder tips
+full_tree <- drop.tip(
+  full_tree,
+  c("North_Atlantic", "South_Atlantic", "Pacific")
+)
+
+# -------------------------------
+# CHECK & PLOT
+# -------------------------------
+
+png("test.png", width = 480, height = 480, units = "px")
+plot(full_tree, cex = 0.8)
+axisPhylo()
+dev.off()
+
+# Write out nexus
+write.nexus(full_tree, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNAPP-hydro_5_max_cov_start_tree.nex"))
+
+###### ####################
+###### ## HYDROBASINS 5 - 1 random sample ###
+###### ####################
+###### run <- 1
+###### for(run in 1:run.num){
+######   #Subset geneid to the top coverage samples
+######   run.i.coverage.basin_5 <- rand.basin_5[[run]]
+######   
+######   my_genind_ti_SNPs.short <- my_genind_ti[run.i.coverage.basin_5,]
+######   sites.SNPS.short <- sites[sites$samples%in%run.i.coverage.basin_5,]
+######   
+######   #Remove non-varient sites
+######   SNP.allele.num <- vector()
+######   for(i in 1:dim(my_genind_ti_SNPs.short@tab)[2]){
+######     temp.gt <- unique(my_genind_ti_SNPs.short@tab[,i])
+######     temp.gt <- temp.gt[!is.na(temp.gt)]
+######     SNP.allele.num[i] <- length(temp.gt)
+######   }
+######   table(SNP.allele.num)
+######   
+######   my_genind_ti_SNPs.short <- my_genind_ti_SNPs.short[,SNP.allele.num!=1]
+######   
+######   # Get smaples from vcf file
+######   vcf.bi.short <- vcf.bi[,c("FORMAT",sites.SNPS.short$samples)]
+######   poly.snps <- substr(colnames(my_genind_ti_SNPs.short@tab), start = 1, stop =  nchar(colnames(my_genind_ti_SNPs.short@tab))-2)
+######   all_snps <- paste(vcf.bi.short@fix[,1],vcf.bi.short@fix[,2], sep = "_")
+######   
+######   vcf.bi.short <- vcf.bi.short[all_snps%in%poly.snps,]
+######   vcf.bi.short <- vcf.bi.short[is.biallelic(vcf.bi.short),]
+######   
+######   gt <- extract.gt(vcf.bi.short, return.alleles = TRUE, convertNA = TRUE)
+######   
+######   gt[gt=="A/A"] <- "A"
+######   gt[gt=="T/T"] <- "T"
+######   gt[gt=="G/G"] <- "G"
+######   gt[gt=="C/C"] <- "C"
+######   gt[gt=="A/G"] <- "R"
+######   gt[gt=="G/A"] <- "R"
+######   gt[gt=="C/T"] <- "Y"
+######   gt[gt=="T/C"] <- "Y"
+######   gt[gt=="A/C"] <- "M"
+######   gt[gt=="C/A"] <- "M"
+######   gt[gt=="G/T"] <- "K"
+######   gt[gt=="T/G"] <- "K"
+######   gt[gt=="C/G"] <- "S"
+######   gt[gt=="G/C"] <- "S"
+######   gt[gt=="A/T"] <- "W"
+######   gt[gt=="T/A"] <- "W"
+######   gt[gt=="."] <- "?"
+######   
+######   # Rename file with population name
+######   colnames(gt)==sites.SNPS.short$samples
+######   colnames(gt) <- paste(sites.SNPS.short$basin_5, sites.SNPS.short$samples, sep = "_")
+######   
+######   
+######   # Stats on how many samples and SNPs there are
+######   colnames(gt)
+######   dim(gt)
+######   
+######   ggplot(sites_sf[sites_sf$samples%in%run.i.coverage.basin_5,]) +
+######     geom_sf(data = hydrobasins_5, aes(fill = as.factor(HYBAS_ID)), show.legend = F) +
+######     geom_sf(size = 3)
+######   
+######   # Create in put
+######   
+######   
+######   SNAPP_run_name <- paste0("-SNAPP-hydro_5_run", run)
+######   #Write nexus
+######   write.nexus.data(t(gt), file = paste0(dir.path, "SNAPP/", SNP.library.name, SNAPP_run_name,".nex"), 
+######                    format = "DNA", missing = "?", interleaved = F)
+######   
+######   ## Set up files following https://github.com/mmatschiner/tutorials/blob/master/divergence_time_estimation_with_snp_data/README.md
+######   ## (1) Phylip file
+######   colnames(gt) <- sites.SNPS.short$samples
+######   
+######   ape::write.dna(t(gt), file = paste0(dir.path, "SNAPP/", SNP.library.name,SNAPP_run_name,".phy"),
+######                  format ="interleaved", nbcol = -1, colsep = "")
+######   ## (2) Species table
+######   species.df <- data.frame(species = paste0(sites.SNPS.short$basin_5,"-",sites.SNPS.short$samples), sample = sites.SNPS.short$samples)
+######   write.table(species.df, file = paste0(dir.path, "SNAPP/", SNP.library.name,SNAPP_run_name,".txt"),
+######               row.names = F,quote = F, sep = "\t")
+######   # (3) Theta priors from Stranding et al 2022
+######   # All Hetaerina samples
+######   # normal(offset,mean,sigma)
+######   # Titia divergence from SNAPP run without migration
+######   ## hist(rnorm(10000, 3.4, 0.1), breaks = 30)
+######   contrant.df <- data.frame(x = "normal(0,3.73,0.8)", y = "crown", 
+######                             z = paste0(sites.SNPS.short$basin_5,"-",sites.SNPS.short$samples, sep = ",",collapse = ""))
+######   # Americana/calverti
+######   #remove trailing comma
+######   contrant.df$z <- substr(contrant.df$z, start = 1 , stop = nchar(contrant.df$z)-1)
+######   
+######   write.table(contrant.df, file = paste0(dir.path, "SNAPP/", SNP.library.name,SNAPP_run_name,".con.txt"),
+######               row.names = F, col.names = F, quote = F, sep = "\t")
+######   
+###### }
+###### 
