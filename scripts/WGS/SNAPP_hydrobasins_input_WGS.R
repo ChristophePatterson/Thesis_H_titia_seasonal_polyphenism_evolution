@@ -315,7 +315,8 @@ plot(full_tree, cex = 0.8)
 axisPhylo()
 dev.off()
 
-# Write out nexus
+# Write out trees
+write.tree(full_tree, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNAPP-hydro_4_max_cov_start_tree.newick"))
 write.nexus(full_tree, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNAPP-hydro_4_max_cov_start_tree.nex"))
 
 
@@ -527,6 +528,7 @@ axisPhylo()
 dev.off()
 
 # Write out nexus
+write.tree(full_tree, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNAPP-hydro_5_max_cov_start_tree.newick"))
 write.nexus(full_tree, file = paste0(dir.path, "SNAPP/", SNP.library.name,"-SNAPP-hydro_5_max_cov_start_tree.nex"))
 
 ###### ####################

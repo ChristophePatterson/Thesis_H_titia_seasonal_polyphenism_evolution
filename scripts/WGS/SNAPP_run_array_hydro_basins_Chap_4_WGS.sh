@@ -32,7 +32,7 @@ module load ruby-uoneasy/3.4.2-GCCcore-13.3.0
 base_dir="/gpfs01/home/$USER/code/Github/Thesis_H_titia_seasonal_polyphenism_evolution"
 cd $base_dir
 
-hydro="4"
+hydro="5"
 # Output directory
 output_dir=(${base_dir}/data/SNAPP/Hydro_${hydro}_WGS_max_cov)
 input_dir=(${base_dir}/data/SNPs/SNAPP)
@@ -45,7 +45,7 @@ phy_file=(titia.mysnps-SNAPP-hydro_${hydro}_max_cov)
 # Uses https://github.com/mmatschiner/tutorials/blob/master/divergence_time_estimation_with_snp_data/README.md
 
 ruby ${base_dir}/scripts/snapp_prep.rb -p $input_dir/$phy_file.phy -t $input_dir/$phy_file.txt \
--s $input_dir/${phy_file}_start_tree.nex -c $input_dir/$phy_file.con.txt -l 1000000 -x $output_dir/$phy_file.xml -o $output_dir/$phy_file
+-s $input_dir/${phy_file}_start_tree.newick -c $input_dir/$phy_file.con.txt -l 1000000 -x $output_dir/$phy_file.xml -o $output_dir/$phy_file
 ## ALERT I HAVE CHANGED THE LOCATION OF BEAST FROM HOME TO NOBACKUP SINCE RUNNING THIS SCRIPT AS SUCH PREPARE FOR ERRORS
 
 ~/apps/beast/bin/beast -threads $SLURM_CPUS_PER_TASK -overwrite $output_dir/$phy_file.xml > $output_dir/$phy_file.screen.log
