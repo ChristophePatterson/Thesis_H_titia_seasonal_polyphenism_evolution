@@ -1,463 +1,1175 @@
-??phylosignal_network
-3642+729+314
-5964-4685
-478+344+263+443
-1528-1050
-219,00/3
-219/3
-202/3
-202.16/3
-42.11+78.83+86.58
-95.40/2
-library(terra)#
-library(tmap)#
-library(rgdal)#
-library(tmaptools)#
-library(sf)#
+phylo_varcov = vcv(rescale(tree,model="OU",alpha=alpha))#
 #
-library(geiger)#
-library(phyloraster)
-tree<-read.tree("~/Downloads/singe_bird_phylo.tre")
-bird.geo<-read.csv("~/Downloads/Presence-Absence-Matrix_7-19-21.csv")
-r <- rast(ncol=180, nrow=90) #make a 1x1 degree raster#
+spnames <- data$species#
+dat <- data.frame(#
+    species = factor(spnames, levels = rownames(phylo_varcov)),#
+    dummy = factor(1),#
+    hw.flip= 1-data$hw.raw)#
+fit_phylo_betazi <- glmmTMB(hw.flip ~ 1 + (1|species) +#
+                         propto(0 + species | dummy, phylo_varcov),ziformula=~1,#
+                     data = dat,family=zibeta(link="logit"))
+phylo_varcov = vcv(rescale(tree,model="OU",alpha=alpha))#
 #
-for(i in 1:10){ #length(unique(bird.geo$Tip_Label))){ #project each species range into that raster#
-	bg.sub <- subset(bird.geo,Tip_Label==unique(bird.geo$Tip_Label)[i])#
-	if(i==1){#
-	br = rasterize(as.matrix(bg.sub[,6:7]),r)#
-	names(br) = unique(bird.geo$Tip_Label)[i]#
-	} else{#
-	new_layer=rasterize(as.matrix(bg.sub[,6:7]),r)#
-	names(new_layer)=unique(bird.geo$Tip_Label)[i]#
-	br = c(br, new_layer )#
-	}#
-	if(i%%100==0){print(i)}#
-}
-br
-plot(br)
-r <- rast(ncol=180, nrow=90) #make a 1x1 degree raster#
+spnames <- data$species#
+dat <- data.frame(#
+    species = factor(spnames, levels = rownames(phylo_varcov)),#
+    dummy = factor(1),#
+    hw.flip= 1-data$hw.raw)#
+fit_phylo_betazi <- glmmTMB(hw.flip ~ 1 + (1|species) +#
+                         propto(0 + species | dummy, phylo_varcov),ziformula=~1,#
+                     data = dat,family=beta_family(link="logit"))
+fit_phylo_betazi_simres <- simulateResiduals(fit_phylo_betazi)
+plot(fit_phylo_gamma_simres)
+phylo_varcov = vcv(rescale(tree,model="OU",alpha=alpha))#
 #
-for(i in 1:1000){ #length(unique(bird.geo$Tip_Label))){ #project each species range into that raster#
-	bg.sub <- subset(bird.geo,Tip_Label==unique(bird.geo$Tip_Label)[i])#
-	if(i==1){#
-	br = rasterize(as.matrix(bg.sub[,6:7]),r)#
-	names(br) = unique(bird.geo$Tip_Label)[i]#
-	} else{#
-	new_layer=rasterize(as.matrix(bg.sub[,6:7]),r)#
-	names(new_layer)=unique(bird.geo$Tip_Label)[i]#
-	br = c(br, new_layer )#
-	}#
-	if(i%%100==0){print(i)}#
-}
-phylo.pres(x=br,tree=tree)
-dataprep <- phylo.pres(x=br,tree=tree)
-names(dataprep$x) == tree$tip.label
-tree.trimmed = keep.tip(tree,names(br))
-dataprep <- phylo.pres(x=br,tree=tree.trimmed)
-str(dataprep)
-pdr <- rast.pd(x = dataprep$x, dataprep$tree)
-plot(pdr$PD, main = "Phylogenetic diversity")
-plot(pdr$PD, main = "Phylogenetic diversity")
-pdr$PD
-pdr
-dataprep$x
-dataprep$tree
-plot(dataprep$tree)
-plot(dataprep$x)
-phyloraster:::rast.pd()
-phyloraster:::rast.pd
-?rast.pd()
-dataprep <- phylo.pres(x=br,tree=tree)
-pdr <- rast.pd(x = dataprep$x, dataprep$tree)
-plot(pdr)
-pdf
-pdr
-dataprep <- phylo.pres(x=subst(br,NA,0),tree=tree.trimmed)
-br
-pdr <- rast.pd(x = dataprep$x, dataprep$tree)
-plot(pdr)
-br <- subst(br,NA,0) #replace NAs with 0s#
-tree.trimmed <- keep.tip(tree,names(br)) #trim phylogeny to species present (could also keep entire phylogeny, to be discussed)#
-dataprep <- phylo.pres(x=br,tree=tree.trimmed)
-?rast()
-moll <- "+proj=moll +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"
-moll <- "+proj=moll +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"#
-#
-r <- rast(ncol=180, nrow=90, crs=moll) #make a 1x1 degree raster, should revisit if this is too coarse
-r
-for(i in 1:1000){ #length(unique(bird.geo$Tip_Label))){ #project each species range into that raster#
-	bg.sub <- subset(bird.geo,Tip_Label==unique(bird.geo$Tip_Label)[i])#
-	if(i==1){#
-	br = rasterize(as.matrix(bg.sub[,6:7]),r)#
-	names(br) = unique(bird.geo$Tip_Label)[i]#
-	} else{#
-	new_layer=rasterize(as.matrix(bg.sub[,6:7]),r)#
-	names(new_layer)=unique(bird.geo$Tip_Label)[i]#
-	br = c(br, new_layer )#
-	}#
-	if(i%%100==0){print(i)}#
-}
-br <- subst(br,NA,0) #replace NAs with 0s#
-tree.trimmed <- keep.tip(tree,names(br)) #trim phylogeny to species present (could also keep entire phylogeny, to be discussed)#
-dataprep <- phylo.pres(x=br,tree=tree.trimmed)#
-#
-pdr <- rast.pd(x = dataprep$x, dataprep$tree) #create a raster with phylogenetic diversity#
-plot(pdr) #et voila
-br
-plot(br)
-plot(data.prep$x)
-plot(dataprep$x)
-br
-phyloraster:::rast.pd
-terra::is.lonlat(br)
-?is.lonlat()
-?is.lonlat
-log(0.4/(1-0.4))
-log(0.6/(1-0.6))
-seq(0.01,1)
-seq(0.01,1,length=100)
-0.99/0.01
-log(99)
-exp(6)
-exp(1.1)
-exp(100)
-exp(6)
-99.999/0.001
-1116+52\
-1116+52
-1116-(16+52)
-1100-734+1040
-1040-734
-509.2/4
-393.14/4
-zab<-read.csv("~/Dropbox/id_birds.csv")
-outmat<-matrix(nrow=length(sites),ncol=length(sites))#
-colnames(outmat)<-sites#
-rownames(outmat)<-sites#
-#
-for(i in 1:length(sites)){#
-	for(j in 1:length(sites)){#
-	ibirds = subset(zab, site==sites[i])$species#
-	jbirds = subset(zab, site==sites[j])$species#
-	outmat[i,j]<-sum(!ibirds%in%jbirds)#
-	}#
-#
-}
-head(id_birds)
-head(zab)
-sites<-unique(zab$site)#
-outmat<-matrix(nrow=length(sites),ncol=length(sites))#
-colnames(outmat)<-sites#
-rownames(outmat)<-sites#
-#
-for(i in 1:length(sites)){#
-	for(j in 1:length(sites)){#
-	ibirds = subset(zab, site==sites[i])$species#
-	jbirds = subset(zab, site==sites[j])$species#
-	outmat[i,j]<-sum(!ibirds%in%jbirds)#
-	}#
-#
-}
-outmat
-head(zab)
-length(unique(zab$species))
-zab<-read.csv("~/Dropbox/id_birds.csv")
-sites<-unique(zab$site)#
-outmat<-matrix(nrow=length(sites),ncol=length(sites))#
-colnames(outmat)<-sites#
-rownames(outmat)<-sites#
-#
-for(i in 1:length(sites)){#
-	for(j in 1:length(sites)){#
-	ibirds = subset(zab, site==sites[i])$species#
-	jbirds = subset(zab, site==sites[j])$species#
-	outmat[i,j]<-sum(!ibirds%in%jbirds)#
-	}#
-#
-}
-outmat
-regions<-unique(zab$region)#
-#
-outmat<-matrix(nrow=length(regions),ncol=length(regions))#
-colnames(outmat)<-regions#
-rownames(outmat)<-regions#
-#
-for(i in 1:length(regions)){#
-	for(j in 1:length(regions)){#
-	ibirds = unique(subset(zab, region==regions[i])$species)#
-	jbirds = unique(subset(zab, region==regions[j])$species)#
-	outmat[i,j]<-sum(!ibirds%in%jbirds)#
-	}#
-#
-}
-outmat
-790+155+64
-800*20+571+1011*2+1106
-800*19+571+1011*2+1106
-zab<-read.csv("~/Dropbox/id_birds.csv")
-regions<-unique(zab$region)#
-#
-outmat<-matrix(nrow=length(regions),ncol=length(regions))#
-colnames(outmat)<-regions#
-rownames(outmat)<-regions#
-#
-for(i in 1:length(regions)){#
-	for(j in 1:length(regions)){#
-	ibirds = unique(subset(zab, region==regions[i])$species)#
-	jbirds = unique(subset(zab, region==regions[j])$species)#
-	outmat[i,j]<-sum(!ibirds%in%jbirds)#
-	}#
-#
-}
-outmat
-length(unique(zab$species))
-sites<-unique(zab$site)#
-outmat<-matrix(nrow=length(sites),ncol=length(sites))#
-colnames(outmat)<-sites#
-rownames(outmat)<-sites#
-#
-for(i in 1:length(sites)){#
-	for(j in 1:length(sites)){#
-	ibirds = subset(zab, site==sites[i])$species#
-	jbirds = subset(zab, site==sites[j])$species#
-	outmat[i,j]<-sum(!ibirds%in%jbirds)#
-	}#
-#
-}
-outmat
-122+1050
-1200+1050
-900+200+650
-900 + 90 + 650
-1200+350+600
-1200+60+350+900
-1200+60+350+800
-700+360+200+650
-1200+300+100+600
-1900+100+90+650
-setwd("~/Thesis_H_titia_seasonal_polyphenism_evolution/data")
-require(ggplot2)#
-library(data.table)#
-require(gridExtra)#
-phen<-read.csv("data/MASTER_titia_phenotypes_v1.0.csv")
-ACI.curve <- function(P,data){ # inputs are parameters (P) and dataset#
-  # First, scale parameter values, this makes it easier for optim, as you feed it#
-  # parameters on the same scale#
-  (d.star<-P[1]/10)#
-  (sigma<-P[2]/20)#
-  (alpha1<-P[3]/1200)#
-  (alpha2<-P[4]/200000)#
-  (phi<-P[5]/10000)#
-  (z<-P[6]/250)#
-  if(alpha2>=alpha1){alpha2=alpha1-0.0001}#
-  lambda<-alpha2+(alpha1-alpha2)*exp(-(abs((c(data$date)-d.star)/sigma)^z)) # This is equation for function#
-  if (length(which(lambda==1))>0 | length(which(lambda==0))>0) LL.ind<-rep(-1000000,length(data$date)) else {#
-    a<-lambda/phi#
-    b<-(1-lambda)/phi#
-    LL.ind<-lgamma(a+b)-lgamma(a)-lgamma(b)+(a-1)*log(data$scaledACI+0.0001)+(b-1)*log(1-data$scaledACI+0.0001) # This calculates likelihood#
-  }#
-  return(sum(LL.ind)) # Sums likelihood across each value#
-}
-data<-phen[,c(10,40)]
-setwd("~/Thesis_H_titia_seasonal_polyphenism_evolution/d")
-setwd("~/Thesis_H_titia_seasonal_polyphenism_evolution/")
-require(ggplot2)#
-library(data.table)#
-require(gridExtra)#
-phen<-read.csv("data/MASTER_titia_phenotypes_v1.0.csv")
-data<-phen[,c(10,40)]
-data
+spnames <- data$species#
+dat <- data.frame(#
+    species = factor(spnames, levels = rownames(phylo_varcov)),#
+    dummy = factor(1),#
+    hw.flip= 1-data$hw.raw)#
+fit_phylo_betazi <- glmmTMB(hw.flip ~ 1  +#
+                         propto(0 + species | dummy, phylo_varcov),ziformula=~1,#
+                     data = dat,family=beta_family(link="logit"))
+fit_phylo_betazi_simres <- simulateResiduals(fit_phylo_betazi)
+plot(fit_phylo_gamma_simres)
 head(data)
-data<-data.frame(data)#
-    # Remove any NAs#
-data<-data[which(is.na(data[,2])==F),]#
-data<-data[which(is.na(data[,1])==F),]#
-colnames(data)[1]<-"date"#
-data$scaledACI<-(data[,2]-min(data[,2]))/(max(data[,2])-min(data[,2]))#
-    # Sequence of dates#
-date.seq<-seq(min(data[,1]),max(data[,1]),1)#
-#data<-data[order(data[,1]),]
-## Fit curve ###
-    initial<-c(1300,1000,1000,1000,1000,1000) # Initial parameter values, all on roughly same scale#
-    low<-c(1,200,100,1,1,250) # Min allowed parameter values#
-    high<-c(2000,2000,1200,10000,10000,5000) # Max allowed parameter values#
-    result<-optim(par=initial,fn=ACI.curve,data=data,method="L-BFGS-B",lower=low,upper=high,control=list(trace=1,fnscale=-1,maxit=1000)) # Run optim#
-    P.new<-c(result$par[1]/10,result$par[2]/20,result$par[3]/1200,result$par[4]/200000,result$par[5]/10000,result$par[6]/250) # Rescale parameters#
-    lambda<-P.new[4]+(P.new[3]-P.new[4])*exp(-(abs((date.seq-P.new[1])/(P.new[2]))^(P.new[6]))) # Fit function with fitted parameter values#
-    ### Differentiating ####
-    first.deriv<-(P.new[6]*exp(-((P.new[1]-date.seq)^2/P.new[2]^2)^(P.new[6]/2)) * ((P.new[1]-date.seq)^2/P.new[2]^2)^(P.new[6]/2)) / (P.new[1]-date.seq)#
-    second.deriv<-( P.new[6]*exp(-((P.new[1]-date.seq)^2/P.new[2]^2)^(P.new[6]/2)) * ((P.new[1]-date.seq)^2/P.new[2]^2)^((P.new[6]-2)/2) * (P.new[6]*(((P.new[1]-date.seq)^2/P.new[2]^2)^(P.new[6]/2) -1) +1) ) / (P.new[1]^2)#
-    deriv.data<-as.data.frame(cbind(first=first.deriv,second=second.deriv,date=date.seq))#
-    #plot(deriv.data$first~deriv.data$date,type="l") # Plot first derivative if you're interested#
-    #plot(deriv.data$second~deriv.data$date,type="l") # Plot second derivative if you're interested#
-    # Date of first max 2nd deritave#
-    max.second1<-which(deriv.data[deriv.data$date<=P.new[1],'second'] %in% max(deriv.data[deriv.data$date<=P.new[1],'second']))#
-    (date.max.second1<-deriv.data[deriv.data$date<=P.new[1],'date'][max.second1])#
-    # Date of second max 2nd deritave#
-    max.second2<-which(deriv.data[deriv.data$date>=P.new[1],'second'] %in% max(deriv.data[deriv.data$date>=P.new[1],'second']))#
-    (date.max.second2<-deriv.data[deriv.data$date>=P.new[1],'date'][max.second2])#
-    # Date of first max 2nd deritave#
-    max.first<-max(deriv.data[deriv.data$date<=P.new[1],'first'])#
-    max.first1<-which(deriv.data[deriv.data$date<=P.new[1],'first'] %in% max.first)#
-    (date.max.first<-deriv.data[deriv.data$date<=P.new[1],'date'][max.first1])#
-    (lambda.max.first<-P.new[4]+(P.new[3]-P.new[4])*exp(-(abs((date.max.first-P.new[1])/(P.new[2]))^(P.new[6]))))#
-    # Date of second max 2nd deritave#
-    min.first<-min(deriv.data[deriv.data$date>=P.new[1],'first'])#
-    min.first2<-which(deriv.data[deriv.data$date>=P.new[1],'first'] %in% min.first)#
-    (date.min.first<-deriv.data[deriv.data$date>=P.new[1],'date'][min.first2])#
-    (lambda.min.first<-P.new[4]+(P.new[3]-P.new[4])*exp(-(abs((date.min.first-P.new[1])/(P.new[2]))^(P.new[6]))))#
-    ### Plotting ####
-    with(data,plot(scaledACI~date,type="n",ylab="perched hindwing",xlab="date",xlim=c(0,365),main=names(data)[2])) # Plot#
-    ## Filling area under curve#
-    lambda.new<-P.new[4]+(P.new[3]-P.new[4])*exp(-(abs((seq(date.max.second1,date.max.second2,0.1)-P.new[1])/(P.new[2]))^(P.new[6])))#
-    lambda.one<-P.new[4]+(P.new[3]-P.new[4])*exp(-(abs((date.max.second1-P.new[1])/(P.new[2]))^(P.new[6])))#
-    lambda.growing<-P.new[4]+(P.new[3]-P.new[4])*exp(-(abs((seq(round(date.max.second1,0),round(date.max.second2,0),1)-P.new[1])/(P.new[2]))^(P.new[6])))#
-    x<-c(seq(date.max.second1,date.max.second2,0.1),rev(seq(date.max.second1,date.max.second2,0.1)))#
-    y<-c(lambda.new,rep(0,length(lambda.new)))#
-    pol <- cbind(x, y)#
-    polygon(x,y,col="light grey",border=NA)#
-    lines(lambda~date.seq,col=1,lwd=2)#
-    ## Add points#
-    with(data,points(scaledACI~date,col="dark grey"))#
-    ## Annotating#
-    # duration#
-    segments(date.max.second1,0,date.max.second1,.9,lty=2,col=2); text(date.max.second1,.93,"start",cex=0.9)#
-    segments(date.max.second2,0,date.max.second2,.9,lty=2,col=2); text(date.max.second2,.93,"end",cex=0.9)#
-    text(P.new[1],.85,"duration",cex=0.9)#
-    arrows(P.new[1]-15,.85,date.max.second1,.85,length=.1,col=2)#
-    arrows(P.new[1]+15,.85,date.max.second2,.85,length=.1,col=2)#
-    # sum#
-    text(P.new[1],.4,"sum",cex=0.9)#
-    # peak#
-    arrows(35,max(lambda),P.new[1],max(lambda),length=.1,col=2)#
-    text(25,max(lambda),"peak",cex=0.9)#
-    # rate#
-    arrows(35,lambda.max.first,date.max.first,lambda.max.first,length=.1,col=2)#
-    text(22,lambda.max.first,"max rate",cex=.9)#
-    arrows(225,lambda.min.first,date.min.first,lambda.min.first,length=.1,col=2)#
-    text(238,lambda.max.first,"min rate",cex=.9)
-require(Rphylopars)
-?phylopars()
-#this script calculates the peak and trough mean and standard error for each tip#
-#current data transformation is a logit, subtracting 0.01 from each value so 1 values don't hit Inf#
-setwd("~/Thesis_H_titia_seasonal_polyphenism_evolution")#
-phen<-read.csv("data/MASTER_titia_phenotypes_v1.0.csv")#
-peak.trough.season <- read.csv("data/peak_trough_season_dates.csv")#
-#as a result of the normalisation of non standard manual measurements, a few measurements are very small#
-#consequently, removing all values < 0.05 (the smallest hindwingspot in a standard manually measured wing)#
-#this removes 35 data points#
+hist(data$hw.raw)
+data=peak.data.rphylopars
+phylo_varcov = vcv(rescale(tree,model="OU",alpha=alpha))#
 #
-phen<-subset(phen,draft.estimate.prop.pigment>0.05)#
+spnames <- data$species#
+dat <- data.frame(#
+    species = factor(spnames, levels = rownames(phylo_varcov)),#
+    dummy = factor(1),#
+    hw.flip= 1-data$hw.raw)#
+fit_phylo_betazi <- glmmTMB(hw.flip ~ 1  +#
+                         propto(0 + species | dummy, phylo_varcov),ziformula=~1,#
+                     data = dat,family=beta_family(link="logit"))
+fit_phylo_betazi_simres <- simulateResiduals(fit_phylo_betazi)
+plot(fit_phylo_gamma_simres)
+phylo_varcov = vcv(rescale(tree,model="OU",alpha=alpha))#
 #
-lt<-LETTERS[1:8]#
-tips.a.to.h<-c("7050000010-NB0103",  "7050002710-ZANAa05","7050054670-BALB05", "7050849600-TXRSa04",  "7050045480-ACSFc04","7050041410-RCJRa01","7050822250-CYa04" , "7050048620-CVa06" ) #
+spnames <- data$species#
+dat <- data.frame(#
+    species = factor(spnames, levels = rownames(phylo_varcov)),#
+    dummy = factor(1),#
+    hw.flip= 1-data$hw.raw)#
+fit_phylo_betazi <- glmmTMB(hw.flip ~ 1  +#
+                         propto(0 + species | dummy, phylo_varcov),ziformula=~1, dispformula=~species,#
+                     data = dat,family=beta_family(link="logit"))
+fit_phylo_betazi_simres <- simulateResiduals(fit_phylo_betazi)
+plot(fit_phylo_gamma_simres)
+fit_phylo_betazi
+phylo_varcov = vcv(rescale(tree,model="OU",alpha=alpha))#
 #
-res.mat<-matrix(nrow=length(lt)*2,ncol=3)#
-colnames(res.mat)<-c("species","value","time")
-res.mat
-i=1
-lt.sub<-subset(phen,CLUSTER==lt[i])#
-	lt.peak.sub<-subset(lt.sub,Julian.date>=peak.trough.season[i,2],Julian.date<=peak.trough.season[i,3])#
-	hw.trans.peak = log( (lt.peak.sub$draft.estimate.prop.pigment-0.01) / (1-((lt.peak.sub$draft.estimate.prop.pigment-0.01))))
-lt[i]
-hw.trans.peak
-cbind(lt[i],hw.trans.peak,"peak")
-phen<-subset(phen,draft.estimate.prop.pigment>0.05)#
+spnames <- data$species#
+dat <- data.frame(#
+    species = factor(spnames, levels = rownames(phylo_varcov)),#
+    dummy = factor(1),#
+    hw.logit=data$hw.logit)#
+fit_phylo <- glmmTMB(hw.logit ~ 1 +#
+                         propto(0 + species | dummy, phylo_varcov), dispformula=~species,#
+                     data = dat,family=gaussian())
+fit_phylo_gaussian_simres <- simulateResiduals(fit_phylo)
+plot(fit_phylo_gaussian_simres)
+phylo_varcov = vcv(rescale(tree,model="OU",alpha=alpha))#
 #
-lt<-LETTERS[1:8]#
-tips.a.to.h<-c("7050000010-NB0103",  "7050002710-ZANAa05","7050054670-BALB05", "7050849600-TXRSa04",  "7050045480-ACSFc04","7050041410-RCJRa01","7050822250-CYa04" , "7050048620-CVa06" ) #
-for(i in 1:length(lt)){#
-	lt.sub<-subset(phen,CLUSTER==lt[i])#
-	lt.peak.sub<-subset(lt.sub,Julian.date>=peak.trough.season[i,2],Julian.date<=peak.trough.season[i,3])#
-	hw.trans.peak = log( (lt.peak.sub$draft.estimate.prop.pigment-0.01) / (1-((lt.peak.sub$draft.estimate.prop.pigment-0.01))))#
-	if(i ==1){#
-		out.mat = cbind(lt[i],hw.trans.peak,"peak")#
-	} else {#
-		out.mat = rbind(out.mat, cbind(lt[i],hw.trans.peak,"peak"))#
-	}#
-	lt.trough.sub<-subset(lt.sub,Julian.date>=287 | Julian.date<=91)#
-	hw.trans.trough = log( (lt.trough.sub$draft.estimate.prop.pigment-0.01) / (1-((lt.trough.sub$draft.estimate.prop.pigment-0.01))))#
-		out.mat = rbind(out.mat, cbind(lt[i],hw.trans.trough,"trough"))#
+spnames <- data$species#
+dat <- data.frame(#
+    species = factor(spnames, levels = rownames(phylo_varcov)),#
+    dummy = factor(1),#
+    hw.logit=data$hw.logit)#
+fit_phylo <- glmmTMB(hw.logit ~ 1 + (1|species) +#
+                         propto(0 + species | dummy, phylo_varcov), dispformula=~species,#
+                     data = dat,family=gaussian())
+fit_phylo_gaussian_simres <- simulateResiduals(fit_phylo)
+plot(fit_phylo_gaussian_simres)
+head(data)
+data=trough.data.rphylopars
+phylo_varcov = vcv(rescale(tree,model="OU",alpha=alpha))#
+#
+spnames <- data$species#
+dat <- data.frame(#
+    species = factor(spnames, levels = rownames(phylo_varcov)),#
+    dummy = factor(1),#
+    hw.logit=data$hw.logit)#
+fit_phylo <- glmmTMB(hw.logit ~ 1 + (1|species) +#
+                         propto(0 + species | dummy, phylo_varcov), dispformula=~species,#
+                     data = dat,family=gaussian())
+fit_phylo_gaussian_simres <- simulateResiduals(fit_phylo)
+plot(fit_phylo_gaussian_simres)
+phylo_varcov = vcv(rescale(tree,model="OU",alpha=alpha))#
+#
+spnames <- data$species#
+dat <- data.frame(#
+    species = factor(spnames, levels = rownames(phylo_varcov)),#
+    dummy = factor(1),#
+    pp.squeeze=data$pp.squeeze)#
+fit_phylo_beta <- glmmTMB(pp.squeeze ~ 1 +#
+                         propto(0 + species | dummy, phylo_varcov), dispformula=~species,#
+                     data = dat,family=beta_family())#
+if(return.fit){
+fit_phylo_beta_simres <- simulateResiduals(fit_phylo_beta)
+plot(fit_phylo_beta_simres)
+phylo_varcov = vcv(rescale(tree,model="OU",alpha=alpha))#
+#
+spnames <- data$species#
+dat <- data.frame(#
+    species = factor(spnames, levels = rownames(phylo_varcov)),#
+    dummy = factor(1),#
+    pp.squeeze=data$pp.squeeze)#
+fit_phylo_beta <- glmmTMB(pp.squeeze ~ 1 + (1|species) +#
+                         propto(0 + species | dummy, phylo_varcov), dispformula=~species,#
+                     data = dat,family=beta_family())
+fit_phylo_beta_simres <- simulateResiduals(fit_phylo_beta)
+plot(fit_phylo_beta_simres)
+phylo_varcov = vcv(rescale(tree,model="OU",alpha=alpha))#
+#
+spnames <- data$species#
+dat <- data.frame(#
+    species = factor(spnames, levels = rownames(phylo_varcov)),#
+    dummy = factor(1),#
+    hw.flip= 1-data$hw.raw)#
+fit_phylo_betazi <- glmmTMB(hw.flip ~ 1  +#
+                         propto(0 + species | dummy, phylo_varcov),ziformula=~1, dispformula=~species,#
+                     data = dat,family=beta_family(link="logit"))
+fit_phylo_betazi_simres <- simulateResiduals(fit_phylo_betazi)
+plot(fit_phylo_gamma_simres)
+phylo_varcov = vcv(rescale(tree,model="OU",alpha=alpha))#
+#
+spnames <- data$species#
+dat <- data.frame(#
+    species = factor(spnames, levels = rownames(phylo_varcov)),#
+    dummy = factor(1),#
+    hw.flip= 1-data$hw.raw)#
+fit_phylo_betazi <- glmmTMB(hw.flip ~ 1  + (1|species) +#
+                         propto(0 + species | dummy, phylo_varcov),ziformula=~1, dispformula=~species,#
+                     data = dat,family=beta_family(link="logit"))
+fit_phylo_betazi_simres <- simulateResiduals(fit_phylo_betazi)
+plot(fit_phylo_gamma_simres)
+plotResiduals(fit_phylo_betazi_simres, data$species)
+plot(fit_phylo_betazi_simres)
+plotResiduals(fit_phylo_betazi_simres, data$species)
+plotResiduals(fit_phylo_beta_simres, data$species)
+plotResiduals(fit_phylo_gaussian_simres, data$species)
+require(mgcv)#
+require(ggplot2)#
+require(ape)#
+require(gridExtra)#
+#
+phen<-read.csv("~/Dropbox/MS_predation_experiment/phenotypic_data/MASTER_titia_phenotypes_v2.0_processed.csv")#
+#
+###now modelling the seasonal polyphenism#
+##remove data not assigned to cluster#
+#
+titsub<-subset(phen,!is.na(CLUSTER))#
+n=dim(titsub)[1]#
+#titsub$pp_squeeze<-(titsub$proportion.pigmented * (n - 1) + 0.5) / n#
+#titsub$logit_squeeze<-log(titsub$pp_squeeze/(1-titsub$pp_squeeze))#
+titsub$logit.pp<-log((titsub$proportion.pigmented-0.01)/(1-(titsub$proportion.pigmented-0.01)))#
+titsub$site.id<-interaction(round(titsub$latitude,2),round(titsub$longitude,2))#
+m1_cluster<-gam(logit.pp~ factor(CLUSTER) +s(Julian.date,by= factor(CLUSTER),k=10, bs="cc") +s(site.id, bs="re"),family=gaussian(),data=titsub)
+save(m1_cluster,file="m1_cluster.RData")
+m1_cluster_simres <- simulateResiduals(m1_cluster)
+install.packages("mgcViz")
+m1_cluster_simres <- simulateResiduals(m1_cluster)
+plotResiduals(m1_cluster_simres)
+plotQQunif(m1_cluster_simres)
+? simulateResiduals()
+gam.check(m1_cluster)
+plotQQunif(m1_cluster_simres)
+testDispersion(m1_cluster_simres)
+testZeroInflation(m1_cluster_simres)
+plotResiduals(m1_cluster_simres)
+plotQQunif(m1_cluster_simres)
+str(titsub)
+titsub$site.id<-interaction(round(titsub$latitude,0),round(titsub$longitude,2))#
+m1_cluster<-gam(logit.pp~ factor(CLUSTER) +s(Julian.date,by= factor(CLUSTER),k=10, bs="cc") +s(site.id, bs="re"),family=gaussian(),data=titsub,knots = list(Julian.date = c(1, 365)))
+m1_cluster_simres <- simulateResiduals(m1_cluster)
+plotResiduals(m1_cluster_simres)
+plotQQunif(m1_cluster_simres)
+m1b_cluster<-gam(pp_squeeze~ factor(CLUSTER) +s(Julian.date,by= factor(CLUSTER),k=10, bs="cc") +s(site.id, bs="re"),family=betar(),data=titsub,knots = list(Julian.date = c(1, 365)))
+n=dim(titsub)[1]#
+titsub$pp_squeeze<-(titsub$proportion.pigmented * (n - 1) + 0.5) / n
+m1b_cluster<-gam(pp_squeeze~ factor(CLUSTER) +s(Julian.date,by= factor(CLUSTER),k=10, bs="cc") +s(site.id, bs="re"),family=betar(),data=titsub,knots = list(Julian.date = c(1, 365)))
+m1b_cluster_simres <- simulateResiduals(m1b_cluster)
+plotResiduals(m1b_cluster_simres)
+plotQQunif(m1b_cluster_simres)
+m_one <- gam(#
+  I(proportion.pigmented == 1) ~ factor(CLUSTER) +#
+    s(Julian.date, by = factor(CLUSTER), bs = "cc", k = 10) +#
+    s(site.id, bs = "re"),#
+  family = binomial,#
+  data = titsub,#
+  knots = list(Julian.date = c(1, 365))#
+)
+m_cont <- gam(#
+  pp ~ factor(CLUSTER) +#
+    s(Julian.date, by = factor(CLUSTER), bs = "cc", k = 10) +#
+    s(site.id, bs = "re"),#
+  family = betar(link = "logit"),#
+  data = titsub[titsub$proportion.pigmented < 1, ],#
+  knots = list(Julian.date = c(1, 365))#
+)
+m_cont <- gam(#
+  proportion.pigmented ~ factor(CLUSTER) +#
+    s(Julian.date, by = factor(CLUSTER), bs = "cc", k = 10) +#
+    s(site.id, bs = "re"),#
+  family = betar(link = "logit"),#
+  data = titsub[titsub$proportion.pigmented < 1, ],#
+  knots = list(Julian.date = c(1, 365))#
+)
+m_one_simres <- simulateResiduals(m_one)
+plot(m_one_simres)
+m_cont_simres <- simulateResiduals(m_cont)
+plot(m_cont_simres)
+summary(titsub$proportion.pigmented)#
+mean(titsub$proportion.pigmented < 0.001)#
+mean(titsub$proportion.pigmented > 0.999)
+summary(titsub$proportion.pigmented)#
+mean(titsub$proportion.pigmented < 0.001)#
+mean(titsub$proportion.pigmented > 1)
+summary(titsub$proportion.pigmented)#
+mean(titsub$proportion.pigmented < 0.001)#
+mean(titsub$proportion.pigmented == 1)
+table(cut(titsub$proportion.pigmented, breaks = 20))
+table(cut(subset(titsub,proportion.pigmented<1)$proportion.pigmented, breaks = 20))
+data = titsub[titsub$proportion.pigmented < 1, ]
+dim(data)
+dim(titsub)
+plotResiduals(m_cont_simres, titsub$Julian.date)
+plotResiduals(m_cont_simres)
+plotResiduals(m_cont_simres,Julian.date)
+dim(titsub)
+any(is.na(titsub$proportion.pigmented))
+length(titsub$Julian.date)
+any(is.na(titsub$Julian.date))
+any(is.na(titsub$CLUSTER))
+any(is.na(titsub$site.id))
+plotResiduals(m_cont_simres,titsub$cluster)
+plotResiduals(m_cont_simres,titsub$CLUSTER)
+plotResiduals(m_cont_simres,subset(titsub,proportion.pigmented<1)$CLUSTER)
+plotResiduals(m_cont_simres,subset(titsub,proportion.pigmented<1)$Julian.date)
+plot(m_cont_simres)
+plotResiduals(m_cont_simres,subset(titsub,proportion.pigmented<1)$CLUSTER)
+plotResiduals(m_cont_simres,subset(titsub,proportion.pigmented<1)$Julian.date)
+gam.check(m1_cluster)
+m1_cluster_no_interaction<-gam(logit.pp~ factor(CLUSTER) +s(Julian.date,k=10, bs="cc") +s(site.id, bs="re"),family=gaussian(),data=titsub,knots = list(Julian.date = c(1, 365)))
+m1_cluster_no_interaction_simres <- simulateResiduals(m1_cluster_no_interaction)
+plot(m1_cluster_no_interaction_simres)
+m_cont_no_interaction <- gam(#
+  pp ~ factor(CLUSTER) +#
+    s(Julian.date, bs = "cc", k = 10) +#
+    s(site.id, bs = "re"),#
+  family = betar(link = "logit"),#
+  data = titsub[titsub$proportion.pigmented < 1, ],#
+  knots = list(Julian.date = c(1, 365))#
+)
+m_cont_no_interaction <- gam(#
+  proportion.pigmented ~ factor(CLUSTER) +#
+    s(Julian.date, bs = "cc", k = 10) +#
+    s(site.id, bs = "re"),#
+  family = betar(link = "logit"),#
+  data = titsub[titsub$proportion.pigmented < 1, ],#
+  knots = list(Julian.date = c(1, 365))#
+)
+m_cont_cluster_no_interaction_simres <- simulateResiduals(m_cont_cluster_no_interaction)
+m_cont_no_interaction_simres <- simulateResiduals(m_cont_no_interaction)
+plot(m_cont_no_interaction_simres)
+plot(fitted(m_cont), residuals(m_cont))
+plot(subset(titsub,proportion.pigmented<1)$Julian.date, residuals(m_cont))
+plot(subset(titsub,proportion.pigmented<1)$CLUSTER, residuals(m_cont))
+boxplot(subset(titsub,proportion.pigmented<1)$CLUSTER, residuals(m_cont))
+boxplot(residuals(m_cont) ~subset(titsub,proportion.pigmented<1)$CLUSTER)
+plot(subset(titsub,proportion.pigmented<1)$Julian.date, residuals(m_cont))
+plot(fitted(m_cont), residuals(m_cont))
+plot(fitted(m_cont_no_interaction), residuals(m_cont_no_interaction))
+library(brms)#
+#
+m1 <- brm(#
+  bf(#
+    proportion.pigmented ~ #
+      CLUSTER +#
+      s(Julian.date, bs = "cc", k = 10) +#
+      (1 | site.id),#
+    phi ~ 1#
+  ),#
+  family = zero_one_inflated_beta(),#
+  data = titsub,#
+  chains = 4, cores = 4#
+)
+summary(m1)
+check_brms <- function(model,             # brms model#
+                       integer = FALSE,   # integer response? (TRUE/FALSE)#
+                       plot = TRUE,       # make plot?#
+                       ...                # further arguments for DHARMa::plotResiduals #
+) {#
+  mdata <- brms::standata(model)#
+  if (!"Y" %in% names(mdata))#
+    stop("Cannot extract the required information from this brms model")#
+  dharma.obj <- DHARMa::createDHARMa(#
+    simulatedResponse = t(brms::posterior_predict(model, ndraws = 1000)),#
+    observedResponse = mdata$Y, #
+    fittedPredictedResponse = apply(#
+      t(brms::posterior_epred(model, ndraws = 1000, re.form = NA)),#
+      1,#
+      mean),#
+    integerResponse = integer)#
+  if (isTRUE(plot)) {#
+    plot(dharma.obj, ...)#
+  }#
+  invisible(dharma.obj)#
 }
-out.mat
-write.csv(outmat,file="rphylopars_data.csv")
-write.csv(out.mat,file="rphylopars_data.csv")
-require(mvMORPH)
-?mvSIM()
-343/12
-setwd("~/Thesis_H_titia_seasonal_polyphenism_evolution")#
-phen<-read.csv("data/MASTER_titia_phenotypes_v1.0.csv")#
-peak.trough.season <- read.csv("data/peak_trough_season_dates.csv")#
-#as a result of the normalisation of non standard manual measurements, a few measurements are very small#
-#consequently, removing all values < 0.05 (the smallest hindwingspot in a standard manually measured wing)#
-#this removes 35 data points#
+check_brms(m1)
+plot(fitted(m1), residuals(m1))
+plot(titsub$Julian.date, residuals(m1))
+m2 <- brm(#
+  bf(#
+    proportion.pigmented ~ #
+      CLUSTER +#
+      s(Julian.date, bs = "cc", k = 10) +#
+      (1 | site.id),#
+    phi ~ s(Julian.date, bs = "cc", k = 10)#
+  ),#
+  family = zero_one_inflated_beta(),#
+  data = titsub,#
+  chains = 4, cores = 4#
+)
+pairs(m2)
+plot(fitted(m2), residuals(m2))
+check_brms(m2)
+m3 <- brm(#
+  bf(#
+    proportion.pigmented ~ #
+      CLUSTER +#
+      s(Julian.date, by = CLUSTER, bs = "cc", k = 10) +#
+      (1 | site.id),#
+    phi ~ s(Julian.date, bs = "cc", k = 10)#
+  ),#
+  family = zero_one_inflated_beta(),#
+  data = titsub,#
+  chains = 4, cores = 4#
+)
+summary(m3)
+check_brms(m3)
+loo(m1,m2)
+loo_compare(m1,m2)
+AIC(m1)
+DIC(m1)
+m4 <- brm(#
+  bf(#
+    proportion.pigmented ~ #
+      CLUSTER +#
+      s(Julian.date, by = CLUSTER, bs = "cc", k = 10) +#
+      (1 | site.id),#
+    phi ~ s(Julian.date, bs = "cc", k = 10) + log(fitted)#
+  ),#
+  family = zero_one_inflated_beta(),#
+  data = titsub,#
+  chains = 4, cores = 4#
+)
+m4 <- brm(#
+  bf(#
+    proportion.pigmented ~ #
+      CLUSTER +#
+      s(Julian.date, by = CLUSTER, bs = "cc", k = 10) +#
+      (1 | site.id),#
+    phi ~ s(Julian.date, by=CLUSTER, bs = "cc", k = 10)#
+  ),#
+  family = zero_one_inflated_beta(),#
+  data = titsub,#
+  chains = 4, cores = 4#
+)
+m4
+check_brms(m4)
+newdat=rbind(cbind(min(subset(titsub,CLUSTER=="A")$Julian.date):max(subset(titsub,CLUSTER=="A")$Julian.date),"A"),cbind(min(subset(titsub,CLUSTER=="B")$Julian.date):max(subset(titsub,CLUSTER=="B")$Julian.date),"B"),cbind(min(subset(titsub,CLUSTER=="C")$Julian.date):max(subset(titsub,CLUSTER=="C")$Julian.date),"C"),cbind(min(subset(titsub,CLUSTER=="D")$Julian.date):max(subset(titsub,CLUSTER=="D")$Julian.date),"D"),cbind(min(subset(titsub,CLUSTER=="E")$Julian.date):max(subset(titsub,CLUSTER=="E")$Julian.date),"E"),cbind(min(subset(titsub,CLUSTER=="F")$Julian.date):max(subset(titsub,CLUSTER=="F")$Julian.date),"F"),cbind(min(subset(titsub,CLUSTER=="G")$Julian.date):max(subset(titsub,CLUSTER=="G")$Julian.date),"G"),cbind(min(subset(titsub,CLUSTER=="H")$Julian.date):max(subset(titsub,CLUSTER=="H")$Julian.date),"H"))#
+newdat<-as.data.frame(newdat)#
+colnames(newdat)<-c("Julian.date","CLUSTER")#
+newdat$Julian.date<-as.numeric(as.character(newdat$Julian.date))#
+newdat$longitude = mean(titsub$longitude)#
+newdat$latitude = mean(titsub$latitude)#
+newdat$site.id = interaction(round(mean(titsub$latitude,2),round(mean(titsub$longitude,2))))#
+fit <- plogis(predict(m4, exclude="s(site.id)", newdata = newdat,type="link"))#
+newdat$predicted.pp<-fit+0.01#
 #
-phen<-subset(phen,draft.estimate.prop.pigment>0.05)#
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
 #
-lt<-LETTERS[1:8]#
-tips.a.to.h<-c("7050000010-NB0103",  "7050002710-ZANAa05","7050054670-BALB05", "7050849600-TXRSa04",  "7050045480-ACSFc04","7050041410-RCJRa01","7050822250-CYa04" , "7050048620-CVa06" ) #
+ggplot(titsub,aes(x=Julian.date,y=proportion.pigmented,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = predicted.pp), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,1))
+?predict.brms()
+?posterior_eprid()
+?posterior_predict()
+?posterior_epred()
+fit <- posterior_epred(m4, re.form=NA, newdata = newdat)
+head(fit)
+dim(fit)
+dim(newdat)
+t(apply(fit,1,mean))
+t(apply(fit,2,mean))
+apply(fit,2,mean)
+newdat$predicted.pp<-apply(fit,2,mean)#
 #
-res.mat<-matrix(nrow=length(lt)*2,ncol=5)#
-colnames(res.mat)<-c("CLUSTER","treename","mean","se","time")#
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
 #
-counter=1
-for(i in 1:length(lt)){#
-	lt.sub<-subset(phen,CLUSTER==lt[i])#
-	lt.peak.sub<-subset(lt.sub,Julian.date>=peak.trough.season[i,2],Julian.date<=peak.trough.season[i,3])#
-	hw.trans.peak = log( (lt.peak.sub$draft.estimate.prop.pigment-0.01) / (1-((lt.peak.sub$draft.estimate.prop.pigment-0.01))))#
-	lt.peak.mean = mean(hw.trans.peak)#
-	lt.peak.se = sd(hw.trans.peak)/sqrt(length(hw.trans.peak))#
-	res.mat[counter,]<-c(lt[i],tips.a.to.h[i],lt.peak.mean,lt.peak.se,"peak")#
-	counter = counter+1#
-	lt.trough.sub<-subset(lt.sub,Julian.date>=287 | Julian.date<=91)#
-	hw.trans.trough = log( (lt.trough.sub$draft.estimate.prop.pigment-0.01) / (1-((lt.trough.sub$draft.estimate.prop.pigment-0.01))))#
-	lt.trough.mean = mean(hw.trans.trough)#
-	lt.trough.se = sd(hw.trans.trough)/sqrt(length(hw.trans.trough))#
-	res.mat[counter,]<-c(lt[i],tips.a.to.h[i],lt.trough.mean,lt.trough.se,"trough")#
-	counter = counter+1#
-}
-res.mat
-library(Rphylopars)
-Rphylopars::phylopars()
-Rphylopars:::phylopars()
-Rphylopars:::phylopars
-2.49*8
-1163-117
-150/2
-75/2
-75-37.5
-980.96+185.01+143.93+880.11
-24.84+28.45
-53.29 + 118.95
-1163-117
-(869.84+150+1473.42+1000)*.10
-783+150+2473
-3406+477+350+1000
-980.96+185.01+143.93
-118.96 + 53.29 + 100
-710.76+150+1473.52 + 1000
-3334.28+272.25+200+1309.90
-688.91 + 143.93
-3406+404
-477+3810+400+1000
-3334.28+404.73
-3739.01+1309.90+272.25+300
-1473.52 + 1000 +404
-832.84+100+2877.52+200
-19238.06*.10
-19238.06-1923.806
-17314.25*.10
-2500+1924+1731
-17314-1731
-2500+1924+1731+1000+1558
-4010.36+5687
-1473.52+1000+58
-710.76+150+1473.52 + 1000+58
-3392.28+1309.90+272.25+300
-832.84+100+2531.52
-+200
-832.84+100+2531.52+200
-log(1)
-mvgls
-?mvgls()
-1722.26/2
+ggplot(titsub,aes(x=Julian.date,y=proportion.pigmented,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = predicted.pp), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,1))
+plot(fitted(m4), residuals(m4))
+check_brms(m4)
+mu <- fitted(m4, newdata = newdat, dpar = "mu", re_formula = NA)
+mu
+dim(mu)
+head(mu)
+newdat$predicted.pp<-mu$Estimate#
+#
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(titsub,aes(x=Julian.date,y=proportion.pigmented,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = predicted.pp), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,1))
+phi <- fitted(m4, newdata = newdat, dpar = "phi", re_formula = NA)
+head(phi)
+phi <- fitted(m4, newdata = newdat, dpar = "phi", re_formula = NA)$Estimate
+phi <- fitted(m4, newdata = newdat, dpar = "phi", re_formula = NA)[,1]
+mu <- fitted(m4, newdata = newdat, dpar = "mu", re_formula = NA)[,1]
+newdat$predicted.pp<-mu#
+#
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(titsub,aes(x=Julian.date,y=proportion.pigmented,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = predicted.pp), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,1))
+var_pred <- mu * (1 - mu) / (1 + phi)
+plot(newdat$Julian.date, var_pred, type = "l")
+newdat$predicted.var<-var_pred <- mu * (1 - mu) / (1 + phi)
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(newdat,aes(x=Julian.date,y=var_pred,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = predicted.pp), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,1))
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(newdat,aes(x=Julian.date,y=var_pred,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = var_pred), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(newdat,aes(x=Julian.date,y=mu,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = var_pred), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(titsub,aes(x=Julian.date,y=proportion.pigmented,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = var_pred), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(newdat,aes(x=Julian.date,y=phi,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = var_pred), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(newdat,aes(x=Julian.date,y=phi,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = var_pred), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,1))
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(newdat,aes(x=Julian.date,y=phi,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = var_pred), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,10))
+fit <- posterior_epred(m4, re.form=NA, newdata = newdat)#
+mu=apply(fit,2,mean)
+newdat$predicted.pp<-mu
+ggplot(titsub,aes(x=Julian.date,y=proportion.pigmented,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = predicted.pp), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,1))
+m4
+?brms()
+?brm()
+m4k10 <- brm(#
+  bf(#
+    proportion.pigmented ~ #
+      CLUSTER +#
+      s(Julian.date, by = CLUSTER, bs = "cc", k = 10) +#
+      (1 | site.id),#
+    phi ~ s(Julian.date, by=CLUSTER, bs = "cc", k = 10)#
+  ),#
+  knots = list(Julian.date = c(1, 365)),#
+  family = zero_one_inflated_beta(),#
+  data = titsub,#
+  chains = 4, cores = 4,#
+  control = list(adapt_delta = 0.9)#
+)
+m4k9 <- brm(#
+  bf(#
+    proportion.pigmented ~ #
+      CLUSTER +#
+      s(Julian.date, by = CLUSTER, bs = "cc", k = 9) +#
+      (1 | site.id),#
+    phi ~ s(Julian.date, by=CLUSTER, bs = "cc", k = 9)#
+  ),#
+  family = zero_one_inflated_beta(),#
+  data = titsub,#
+  chains = 4, cores = 4#
+)
+m4k9 <- brm(#
+  bf(#
+    proportion.pigmented ~ #
+      CLUSTER +#
+      s(Julian.date, by = CLUSTER, bs = "cc", k = 9) +#
+      (1 | site.id),#
+    phi ~ s(Julian.date, by=CLUSTER, bs = "cc", k = 9)#
+  ),#
+  knots = list(Julian.date = c(1, 365)),#
+  family = zero_one_inflated_beta(),#
+  data = titsub,#
+  chains = 4, cores = 4#
+)
+mu <- fitted(m4k9, newdata = newdat, dpar = "mu", re_formula = NA)[,1]#
+#fit <- posterior_epred(m4, re.form=NA, newdata = newdat)#
+#mu=apply(fit,2,mean)#
+newdat$predicted.pp<-mu#
+#
+phi <- fitted(m4, newdata = newdat, dpar = "phi", re_formula = NA)#
+newdat$predicted.var<-var_pred <- mu * (1 - mu) / (1 + phi)#
+#
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(titsub,aes(x=Julian.date,y=proportion.pigmented,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = predicted.pp), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,1))
+check_brms(m4k9)
+m4k8 <- brm(#
+  bf(#
+    proportion.pigmented ~ #
+      CLUSTER +#
+      s(Julian.date, by = CLUSTER, bs = "cc", k = 8) +#
+      (1 | site.id),#
+    phi ~ s(Julian.date, by=CLUSTER, bs = "cc", k = 8)#
+  ),#
+  knots = list(Julian.date = c(1, 365)),#
+  family = zero_one_inflated_beta(),#
+  data = titsub,#
+  chains = 4, cores = 4#
+)
+check_brms(m4k8)
+mu <- fitted(m4k8, newdata = newdat, dpar = "mu", re_formula = NA)[,1]#
+#fit <- posterior_epred(m4, re.form=NA, newdata = newdat)#
+#mu=apply(fit,2,mean)#
+newdat$predicted.pp<-mu#
+#
+phi <- fitted(m4, newdata = newdat, dpar = "phi", re_formula = NA)#
+newdat$predicted.var<-var_pred <- mu * (1 - mu) / (1 + phi)#
+#
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(titsub,aes(x=Julian.date,y=proportion.pigmented,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = predicted.pp), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,1))
+save(m4k10,file="m4k10.RData")
+save(m4k9,file="m4k9.RData")
+save(m4k8,file="m4k8.RData")
+getwd()
+m4k7 <- brm(#
+  bf(#
+    proportion.pigmented ~ #
+      CLUSTER +#
+      s(Julian.date, by = CLUSTER, bs = "cc", k = 7) +#
+      (1 | site.id),#
+    phi ~ s(Julian.date, by=CLUSTER, bs = "cc", k = 7)#
+  ),#
+  knots = list(Julian.date = c(1, 365)),#
+  family = zero_one_inflated_beta(),#
+  data = titsub,#
+  chains = 4, cores = 4#
+)
+save(m4k7,file="m4k7.RData")
+check_brms(m4k7)
+mu <- fitted(m4k7, newdata = newdat, dpar = "mu", re_formula = NA)[,1]#
+#fit <- posterior_epred(m4, re.form=NA, newdata = newdat)#
+#mu=apply(fit,2,mean)#
+newdat$predicted.pp<-mu#
+#
+phi <- fitted(m4, newdata = newdat, dpar = "phi", re_formula = NA)#
+newdat$predicted.var<-var_pred <- mu * (1 - mu) / (1 + phi)#
+#
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(titsub,aes(x=Julian.date,y=proportion.pigmented,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = predicted.pp), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,1))
+m4k6 <- brm(#
+  bf(#
+    proportion.pigmented ~ #
+      CLUSTER +#
+      s(Julian.date, by = CLUSTER, bs = "cc", k = 6) +#
+      (1 | site.id),#
+    phi ~ s(Julian.date, by=CLUSTER, bs = "cc", k = 6)#
+  ),#
+  knots = list(Julian.date = c(1, 365)),#
+  family = zero_one_inflated_beta(),#
+  data = titsub,#
+  chains = 4, cores = 4#
+)
+check_brms(m4k6)
+save(m4k6,file="m4k6.RData")
+mu <- fitted(m4k6, newdata = newdat, dpar = "mu", re_formula = NA)[,1]#
+#fit <- posterior_epred(m4, re.form=NA, newdata = newdat)#
+#mu=apply(fit,2,mean)#
+newdat$predicted.pp<-mu#
+#
+phi <- fitted(m4, newdata = newdat, dpar = "phi", re_formula = NA)#
+newdat$predicted.var<-var_pred <- mu * (1 - mu) / (1 + phi)#
+#
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(titsub,aes(x=Julian.date,y=proportion.pigmented,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = predicted.pp), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,1))
+m4k5 <- brm(#
+  bf(#
+    proportion.pigmented ~ #
+      CLUSTER +#
+      s(Julian.date, by = CLUSTER, bs = "cc", k = 5) +#
+      (1 | site.id),#
+    phi ~ s(Julian.date, by=CLUSTER, bs = "cc", k = 5)#
+  ),#
+  knots = list(Julian.date = c(1, 365)),#
+  family = zero_one_inflated_beta(),#
+  data = titsub,#
+  chains = 4, cores = 4#
+)
+save(m4k5,file="m4k5.RData")
+check_brms(m4k5)
+mu <- fitted(m4k5, newdata = newdat, dpar = "mu", re_formula = NA)[,1]#
+#fit <- posterior_epred(m4, re.form=NA, newdata = newdat)#
+#mu=apply(fit,2,mean)#
+newdat$predicted.pp<-mu#
+#
+phi <- fitted(m4, newdata = newdat, dpar = "phi", re_formula = NA)#
+newdat$predicted.var<-var_pred <- mu * (1 - mu) / (1 + phi)#
+#
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(titsub,aes(x=Julian.date,y=proportion.pigmented,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = predicted.pp), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,1))
+m4k4 <- brm(#
+  bf(#
+    proportion.pigmented ~ #
+      CLUSTER +#
+      s(Julian.date, by = CLUSTER, bs = "cc", k = 4) +#
+      (1 | site.id),#
+    phi ~ s(Julian.date, by=CLUSTER, bs = "cc", k = 4)#
+  ),#
+  knots = list(Julian.date = c(1, 365)),#
+  family = zero_one_inflated_beta(),#
+  data = titsub,#
+  chains = 4, cores = 4#
+)
+save(m4k4,file="m4k4.RData")
+check_brms(m4k4)
+mu <- fitted(m4k4, newdata = newdat, dpar = "mu", re_formula = NA)[,1]#
+#fit <- posterior_epred(m4, re.form=NA, newdata = newdat)#
+#mu=apply(fit,2,mean)#
+newdat$predicted.pp<-mu#
+#
+phi <- fitted(m4, newdata = newdat, dpar = "phi", re_formula = NA)#
+newdat$predicted.var<-var_pred <- mu * (1 - mu) / (1 + phi)#
+#
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(titsub,aes(x=Julian.date,y=proportion.pigmented,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = predicted.pp), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,1))
+mu <- fitted(m4k10, newdata = newdat, dpar = "mu", re_formula = NA)[,1]#
+#fit <- posterior_epred(m4, re.form=NA, newdata = newdat)#
+#mu=apply(fit,2,mean)#
+newdat$predicted.pp<-mu#
+#
+phi <- fitted(m4, newdata = newdat, dpar = "phi", re_formula = NA)#
+newdat$predicted.var<-var_pred <- mu * (1 - mu) / (1 + phi)#
+#
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(titsub,aes(x=Julian.date,y=proportion.pigmented,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = predicted.pp), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,1))
+mu <- fitted(m4k9, newdata = newdat, dpar = "mu", re_formula = NA)[,1]#
+#fit <- posterior_epred(m4, re.form=NA, newdata = newdat)#
+#mu=apply(fit,2,mean)#
+newdat$predicted.pp<-mu#
+#
+phi <- fitted(m4, newdata = newdat, dpar = "phi", re_formula = NA)#
+newdat$predicted.var<-var_pred <- mu * (1 - mu) / (1 + phi)#
+#
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(titsub,aes(x=Julian.date,y=proportion.pigmented,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = predicted.pp), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,1))
+mu <- fitted(m4k8, newdata = newdat, dpar = "mu", re_formula = NA)[,1]#
+#fit <- posterior_epred(m4, re.form=NA, newdata = newdat)#
+#mu=apply(fit,2,mean)#
+newdat$predicted.pp<-mu#
+#
+phi <- fitted(m4, newdata = newdat, dpar = "phi", re_formula = NA)#
+newdat$predicted.var<-var_pred <- mu * (1 - mu) / (1 + phi)#
+#
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(titsub,aes(x=Julian.date,y=proportion.pigmented,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = predicted.pp), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,1))
+m4k8_zi <- brm(#
+  bf(#
+    proportion.pigmented ~ #
+      CLUSTER +#
+      s(Julian.date, by = CLUSTER, bs = "cc", k = 8) +#
+      (1 | site.id),#
+    phi ~ s(Julian.date, by=CLUSTER, bs = "cc", k = 8),#
+    zoi ~ s(Julian.date, by=CLUSTER, bs = "cc", k = 8)#
+  ),#
+  knots = list(Julian.date = c(1, 365)),#
+  family = zero_one_inflated_beta(),#
+  data = titsub,#
+  chains = 4, cores = 4#
+)#
+#
+save(m4k8_zi,file="m4k8_zi.RData")#
+#
+m3k8_zi <- brm(#
+  bf(#
+    proportion.pigmented ~ #
+      CLUSTER +#
+      s(Julian.date, by = CLUSTER, bs = "cc", k = 8) +#
+      (1 | site.id),#
+    phi ~ s(Julian.date, bs = "cc", k = 8),#
+    zoi ~ s(Julian.date, bs = "cc", k = 8)#
+  ),#
+  knots = list(Julian.date = c(1, 365)),#
+  family = zero_one_inflated_beta(),#
+  data = titsub,#
+  chains = 4, cores = 4#
+)#
+#
+save(m3k8_zi,file="m3k8_zi.RData")
+loo_m4k8 <-loo(m4k8)
+loo_m4k8 <-loo(m4k8,moment_match=TRUE)
+loo_m4k8
+loo_m4k8_zi <-loo(m4k8_zi,moment_match=TRUE)
+loo_m4k8_zi <-loo(m4k8_zi)
+loo_compare(loo_m4k8,loo_m4k8_zi)
+check_brms(m4k8_zi)
+loo_m3k8_zi <-loo(m3k8_zi)
+loo_compare(loo_m3k8_zi,loo_m4k8_zi)
+mu <- fitted(m4k8_zi, newdata = newdat, dpar = "mu", re_formula = NA)[,1]#
+#fit <- posterior_epred(m4, re.form=NA, newdata = newdat)#
+#mu=apply(fit,2,mean)#
+newdat$predicted.pp<-mu#
+#
+phi <- fitted(m4, newdata = newdat, dpar = "phi", re_formula = NA)#
+newdat$predicted.var<-var_pred <- mu * (1 - mu) / (1 + phi)#
+#
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(titsub,aes(x=Julian.date,y=proportion.pigmented,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = predicted.pp), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,1))
+m4k8_zi
+?brm()
+m4k8_zi <- brm(#
+  bf(#
+    proportion.pigmented ~ #
+      CLUSTER +#
+      s(Julian.date, by = CLUSTER, bs = "cc", k = 8) +#
+      (1 | site.id),#
+    phi ~ s(Julian.date, by=CLUSTER, bs = "cc", k = 8),#
+    zoi ~ s(Julian.date, by=CLUSTER, bs = "cc", k = 8)#
+  ),#
+  knots = list(Julian.date = c(1, 365)),#
+  family = zero_one_inflated_beta(),#
+  data = titsub,#
+  chains = 4, cores = 4,#
+  save_pars = save_pars(all = TRUE),#
+  control = list(adapt_delta = 0.9),#
+  iter = getOption("brms.iter", 3000)#
+#
+)
+check_brms(m4k8_zi)
+mu <- fitted(m4k8_zi, newdata = newdat, dpar = "mu", re_formula = NA)[,1]#
+#fit <- posterior_epred(m4, re.form=NA, newdata = newdat)#
+#mu=apply(fit,2,mean)#
+newdat$predicted.pp<-mu#
+#
+phi <- fitted(m4, newdata = newdat, dpar = "phi", re_formula = NA)#
+newdat$predicted.var<-var_pred <- mu * (1 - mu) / (1 + phi)#
+#
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(titsub,aes(x=Julian.date,y=proportion.pigmented,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = predicted.pp), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,1))
+?brm()
+m4k8_zi <- brm(#
+  bf(#
+    proportion.pigmented ~ #
+      CLUSTER +#
+      s(Julian.date, by = CLUSTER, bs = "cc", k = 8) +#
+      (1 | site.id),#
+    phi ~ s(Julian.date, by=CLUSTER, bs = "cc", k = 8),#
+    zoi ~ s(Julian.date, by=CLUSTER, bs = "cc", k = 8)#
+  ),#
+  knots = list(Julian.date = c(1, 365)),#
+  family = zero_one_inflated_beta(),#
+  data = titsub,#
+  chains = 4, cores = 4,#
+  save_pars = save_pars(all = TRUE),#
+  control = list(adapt_delta = 0.99),#
+  max_treedepth=15,#
+  iter = getOption("brms.iter", 3000)#
+#
+)#
+#
+save(m4k8_zi,file="m4k8_zi.RData")
+m4k8_zi <- brm(#
+  bf(#
+    proportion.pigmented ~ #
+      CLUSTER +#
+      s(Julian.date, by = CLUSTER, bs = "cc", k = 8) +#
+      (1 | site.id),#
+    phi ~ s(Julian.date, by=CLUSTER, bs = "cc", k = 8),#
+    zoi ~ s(Julian.date, by=CLUSTER, bs = "cc", k = 8)#
+  ),#
+  knots = list(Julian.date = c(1, 365)),#
+  family = zero_one_inflated_beta(),#
+  data = titsub,#
+  chains = 4, cores = 4,#
+  save_pars = save_pars(all = TRUE),#
+  control = list(max_treedepth=15,adapt_delta = 0.99),#
+  iter = getOption("brms.iter", 3000)#
+#
+)
+mu <- fitted(m4k8_zi, newdata = newdat, dpar = "mu", re_formula = NA)[,1]#
+#fit <- posterior_epred(m4, re.form=NA, newdata = newdat)#
+#mu=apply(fit,2,mean)#
+newdat$predicted.pp<-mu#
+#
+phi <- fitted(m4, newdata = newdat, dpar = "phi", re_formula = NA)#
+newdat$predicted.var<-var_pred <- mu * (1 - mu) / (1 + phi)#
+#
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(titsub,aes(x=Julian.date,y=proportion.pigmented,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = predicted.pp), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,1))
+check_brms(m4k8_zi)
+save(m4k8_zi,file="m4k8_zi.RData")
+tree.phylo
+A <- vcv(tree.phylo)
+m4k8_zi_phyloBM <- brm(#
+  bf(#
+    proportion.pigmented ~ #
+      CLUSTER +#
+      s(Julian.date, by = CLUSTER, bs = "cc", k = 8) +#
+      (1 | site.id)+ (1 | gr(CLUSTER, cov = A)),#
+    phi ~ s(Julian.date, by=CLUSTER, bs = "cc", k = 8),#
+    zoi ~ s(Julian.date, by=CLUSTER, bs = "cc", k = 8)#
+  ),#
+  knots = list(Julian.date = c(1, 365)),#
+  family = zero_one_inflated_beta(),#
+  data = titsub,#
+  data2 = list(A = A),#
+  chains = 4, cores = 4,#
+  save_pars = save_pars(all = TRUE),#
+  control = list(max_treedepth=15,adapt_delta = 0.99),#
+  iter = getOption("brms.iter", 3000)#
+#
+)#
+#
+save(m4k8_zi_phyloBM,file="m4k8_zi_phyloBM.RData")
+check_brms(m4k8_zi_phyloBM)
+mu <- fitted(m4k8_zi_phyloBM, newdata = newdat, dpar = "mu", re_formula = NA)[,1]#
+#fit <- posterior_epred(m4, re.form=NA, newdata = newdat)#
+#mu=apply(fit,2,mean)#
+newdat$predicted.pp<-mu#
+#
+phi <- fitted(m4, newdata = newdat, dpar = "phi", re_formula = NA)#
+newdat$predicted.var<-var_pred <- mu * (1 - mu) / (1 + phi)#
+#
+new_palette <- c(#
+  # Blues (2)#
+  rgb(0.00, 0.10, 0.70),  # blue, A#
+  rgb(0.20, 0.50, 1.00),  # lighter blue, B#
+  # Greens (5) — wider spread in lightness + slight hue variation#
+  rgb(0.25, 0.55, 0.00),  # dark olive-green, C#
+  rgb(0.35, 0.70, 0.00),  # strong green, G#
+  rgb(0.50, 0.80, 0.00),  # chartreuse3-like, E#
+  rgb(0.65, 0.90, 0.15),  # light yellow-green, D#
+  rgb(0.80, 0.95, 0.40),  # very pale chartreuse, H #
+  # Orange (1)#
+  rgb(0.93, 0.49, 0.20) #F#
+)#
+#
+ggplot(titsub,aes(x=Julian.date,y=proportion.pigmented,group=CLUSTER,col=CLUSTER))+geom_point(alpha=0.2)+scale_colour_manual(values=new_palette[c(1:3,7,5,8,4,6)])+geom_line(data = newdat, aes(x = Julian.date, y = predicted.pp), col="black",lwd = 1)+geom_hline(yintercept=c(0.5),lty=2)+facet_wrap(~CLUSTER)+theme_classic()+ylim(c(0,1))
+m4k8_zi_phyloBM_loo<-loo(m4k8_zi_phyloBM)
+m4k8_zi_phyloBM_loo<-loo(m4k8_zi_phyloBM,moment_match=TRUE)
+ls()
+loo_compare(loo_m4k8_zi, m4k8_zi_phyloBM_loo)
+head(titsub)
+m4k8_zi_region <- brm(#
+  bf(#
+    proportion.pigmented ~ #
+      CLUSTER +#
+      s(Julian.date, by = region, bs = "cc", k = 8) +#
+      (1 | site.id),#
+    phi ~ s(Julian.date, by=region, bs = "cc", k = 8),#
+    zoi ~ s(Julian.date, by=region, bs = "cc", k = 8)#
+  ),#
+  knots = list(Julian.date = c(1, 365)),#
+  family = zero_one_inflated_beta(),#
+  data = titsub,#
+  chains = 4, cores = 4,#
+  save_pars = save_pars(all = TRUE),#
+  control = list(max_treedepth=15,adapt_delta = 0.99),#
+  iter = getOption("brms.iter", 3000)#
+#
+)#
+#
+save(m4k8_zi_region,file="~/Dropbox/m4k8_zi_region.RData")
+ls()
+head(titsub$site.id)
+library(bayesplot)
+np <- nuts_params(m4k8_zi)#
+#
+table(np$Parameter[np$Value == 1])
+0.25*72
