@@ -15,7 +15,7 @@ lt<-LETTERS[1:8]
 
 for(i in 1:length(lt)){
 	lt.sub<-subset(phen,CLUSTER==lt[i])
-	lt.peak.sub<-subset(lt.sub,Julian.date>=peak.trough.season[i,2],Julian.date<=peak.trough.season[i,3])
+	lt.peak.sub<-subset(lt.sub,Julian.date>=peak.trough.season[i,2] & Julian.date<=peak.trough.season[i,3])
 	hw.logit = log( (lt.peak.sub$proportion.pigmented-0.01) / (1-((lt.peak.sub$proportion.pigmented-0.01))))
 	hw.raw = lt.peak.sub$proportion.pigmented
 	
