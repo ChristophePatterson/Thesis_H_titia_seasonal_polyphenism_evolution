@@ -12,7 +12,7 @@ peak.trough.season <- read.csv("data/peak_trough_season_dates.csv")
 lt<-LETTERS[1:8]
 #tips.a.to.h<-c("7050000010-NB0103",  "7050002710-ZANAa05","7050054670-BALB05", "7050849600-TXRSa04",  "7050045480-ACSFc04","7050041410-RCJRa01","7050822250-CYa04" , "7050048620-CVa06" ) 
 
-
+##data set for 2 week window
 for(i in 1:length(lt)){
 	lt.sub<-subset(phen,CLUSTER==lt[i])
 	lt.peak.sub<-subset(lt.sub,Julian.date>=peak.trough.season[i,2] & Julian.date<=peak.trough.season[i,3])
@@ -39,4 +39,34 @@ colnames(out.mat)<-c("species","hw.raw","hw.logit","time")
 out.mat<-as.data.frame(out.mat)
 
 
-write.csv(out.mat,file="rphylopars_data.csv")
+write.csv(out.mat,file="rphylopars_data_2week_window.csv")
+
+
+##data set for 1 week window
+for(i in 1:length(lt)){
+	lt.sub<-subset(phen,CLUSTER==lt[i])
+	lt.peak.sub<-subset(lt.sub,Julian.date>=peak.trough.season[i,4] & Julian.date<=peak.trough.season[i,5])
+	hw.logit = log( (lt.peak.sub$proportion.pigmented-0.01) / (1-((lt.peak.sub$proportion.pigmented-0.01))))
+	hw.raw = lt.peak.sub$proportion.pigmented
+	
+	if(i ==1){
+	
+		out.mat = cbind(lt[i],hw.raw,hw.logit,"peak")
+	
+	} else {
+	
+		out.mat = rbind(out.mat, cbind(lt[i],hw.raw,hw.logit,"peak"))
+	}
+	
+	
+	lt.trough.sub<-subset(lt.sub,Julian.date>=287 | Julian.date<=91)
+	hw.logit.trough = log( (lt.trough.sub$proportion.pigmented-0.01) / (1-((lt.trough.sub$proportion.pigmented-0.01))))
+	hw.raw.trough= lt.trough.sub$proportion.pigmented
+	out.mat = rbind(out.mat, cbind(lt[i],hw.raw.trough,hw.logit.trough,"trough"))
+}
+
+colnames(out.mat)<-c("species","hw.raw","hw.logit","time")
+out.mat<-as.data.frame(out.mat)
+
+
+write.csv(out.mat,file="rphylopars_data_1week_window.csv")
